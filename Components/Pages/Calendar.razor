@@ -1,0 +1,604 @@
+﻿@page "/calendar"
+@rendermode InteractiveServer
+
+@using StudyMate.Models
+@using StudyMate.Services
+@using System.Globalization
+
+@inject TaskService TaskService
+
+<PageTitle>Calendar - StudyMate</PageTitle>
+
+<div class="study-calendar">
+
+    <div class="calendar-title">
+        <div>
+            <h2>📅 Study Calendar</h2>
+            <p>Stay organized and never miss an important deadline.</p>
+        </div>
+
+        <a href="/tasks" class="calendar-add-button">
+            + Add Task
+        </a>
+    </div>
+
+    <div class="calendar-container">
+
+        <div class="calendar-toolbar">
+
+            <button class="calendar-nav-button" @onclick="PreviousMonth">
+                ← Previous
+            </button>
+
+            <div class="calendar-month">
+                <h3>@currentMonth.ToString("MMMM yyyy", englishCulture)</h3>
+                <span>@MonthTaskCount tasks scheduled</span>
+            </div>
+
+            <button class="calendar-nav-button" @onclick="NextMonth">
+                Next →
+            </button>
+
+        </div>
+
+        <div class="calendar-grid">
+
+            @foreach (var day in weekDays)
+            {
+                <div class="calendar-header">@day</div>
+            }
+
+            @for (int i = 0; i < firstDayOffset; i++)
+            {
+                <div class="calendar-empty"></div>
+            }
+
+            @for (int day = 1; day <= daysInMonth; day++)
+            {
+                var date = new DateTime(
+                currentMonth.Year,
+                currentMonth.Month,
+                day);
+
+                var dayTasks = tasks
+                .Where(t => t.DueDate.Date == date)
+                .ToList();
+
+                <div class="calendar-day
+                                @(date == DateTime.Today ? "today" : "")
+                                @(selectedDate == date ? "selected" : "")"
+                     @onclick="() => SelectDate(date)">
+
+                    <div class="calendar-day-number">
+                        <span>@day</span>
+
+                        @if (dayTasks.Count > 0)
+                        {
+                            <span class="task-count">@dayTasks.Count</span>
+                        }
+                    </div>
+
+                    @foreach (var task in dayTasks.Take(3))
+                    {
+                        <div class="calendar-task priority-@task.Priority.ToString().ToLowerInvariant()">
+                            @task.Title
+                        </div>
+                    }
+
+                    @if (dayTasks.Count > 3)
+                    {
+                        <div class="more-tasks">
+                            +@(dayTasks.Count - 3) more
+                        </div>
+                    }
+
+                </div>
+            }
+
+        </div>
+
+        <div class="calendar-legend">
+            <span>
+                <i class="legend-dot high-dot"></i>
+                High Priority
+            </span>
+
+            <span>
+                <i class="legend-dot medium-dot"></i>
+                Medium Priority
+            </span>
+
+            <span>
+                <i class="legend-dot low-dot"></i>
+                Low Priority
+            </span>
+        </div>
+
+    </div>
+
+    @if (selectedDate.HasValue)
+    {
+        <div class="selected-day-panel">
+
+            <div class="selected-day-header">
+
+                <div>
+                    <h4>
+                        📌 Tasks for
+                        @selectedDate.Value.ToString("dd MMMM yyyy", englishCulture)
+                    </h4>
+
+                    <p>@SelectedTasks.Count tasks scheduled</p>
+                </div>
+
+                <button class="close-selection"
+                        @onclick="ClearSelection">
+                    ✕
+                </button>
+
+            </div>
+
+            @if (SelectedTasks.Count == 0)
+            {
+                <div class="empty-calendar-day">
+                    <div>🌿</div>
+                    <h5>No tasks scheduled</h5>
+                    <p>Enjoy your free time or plan something new!</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var task in SelectedTasks)
+                {
+                    <div class="selected-task">
+
+                        <div class="selected-task-info">
+
+                            <h5>@task.Title</h5>
+
+                            <p>📚 @task.Subject</p>
+
+                            @if (!string.IsNullOrWhiteSpace(task.Description))
+                            {
+                                <p>@task.Description</p>
+                            }
+
+                            <p>
+                                📅 Deadline:
+                                @task.DueDate.ToString("dd MMMM yyyy", englishCulture)
+                            </p>
+
+                        </div>
+
+                        <div class="selected-task-badges">
+
+                            <span class="calendar-priority priority-@task.Priority.ToString().ToLowerInvariant()">
+                                @task.Priority
+                            </span>
+
+                            <span class="status-badge">
+                                @task.Status
+                            </span>
+
+                        </div>
+
+                    </div>
+                }
+            }
+
+        </div>
+    }
+
+</div>
+
+<style>
+    .study-calendar {
+        padding: 15px 10px 40px;
+        max-width: 1500px;
+        margin: auto;
+        color: #1e2440;
+    }
+
+    .calendar-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 28px;
+    }
+
+        .calendar-title h2 {
+            font-size: 30px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .calendar-title p {
+            color: #8990a5;
+            margin: 0;
+        }
+
+    .calendar-add-button {
+        background: linear-gradient(120deg, #6658f5, #9360f7);
+        color: white;
+        padding: 12px 22px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 700;
+        box-shadow: 0 5px 15px rgba(102, 88, 245, 0.2);
+    }
+
+        .calendar-add-button:hover {
+            color: white;
+            opacity: 0.9;
+        }
+
+    .calendar-container {
+        background: white;
+        padding: 28px;
+        border-radius: 22px;
+        box-shadow: 0 5px 25px rgba(30, 36, 64, 0.05);
+        margin-bottom: 25px;
+    }
+
+    .calendar-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .calendar-month {
+        text-align: center;
+    }
+
+        .calendar-month h3 {
+            font-size: 25px;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .calendar-month span {
+            color: #969bad;
+            font-size: 13px;
+        }
+
+    .calendar-nav-button {
+        background: #f2efff;
+        color: #6658f5;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 18px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+        .calendar-nav-button:hover {
+            background: #6658f5;
+            color: white;
+        }
+
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .calendar-header {
+        text-align: center;
+        padding: 14px 5px;
+        background: #f1edff;
+        color: #6658f5;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .calendar-day {
+        min-height: 125px;
+        padding: 10px;
+        background: #fafaff;
+        border: 1px solid #eeedf8;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: 0.2s;
+        min-width: 0;
+    }
+
+        .calendar-day:hover {
+            background: #f4f0ff;
+            border-color: #a477ff;
+            transform: translateY(-2px);
+        }
+
+        .calendar-day.today {
+            background: #f0ebff;
+            border: 2px solid #6658f5;
+        }
+
+        .calendar-day.selected {
+            background: #eae3ff;
+            border: 2px solid #9360f7;
+            box-shadow: 0 4px 12px rgba(102, 88, 245, 0.15);
+        }
+
+    .calendar-day-number {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+        font-weight: 800;
+        margin-bottom: 10px;
+    }
+
+    .task-count {
+        background: #6658f5;
+        color: white;
+        border-radius: 50%;
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+    }
+
+    .calendar-task {
+        padding: 7px;
+        border-radius: 7px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 5px;
+        overflow-wrap: anywhere;
+    }
+
+    .priority-high {
+        background: #fee2e2;
+        color: #dc2626;
+        border-left: 3px solid #ef4444;
+    }
+
+    .priority-medium {
+        background: #fef3c7;
+        color: #d97706;
+        border-left: 3px solid #f59e0b;
+    }
+
+    .priority-low {
+        background: #dcfce7;
+        color: #16a34a;
+        border-left: 3px solid #22c55e;
+    }
+
+    .more-tasks {
+        font-size: 11px;
+        color: #6658f5;
+        font-weight: 700;
+        margin-top: 5px;
+    }
+
+    .calendar-empty {
+        background: #fafaff;
+        border-radius: 10px;
+    }
+
+    .calendar-legend {
+        display: flex;
+        gap: 25px;
+        margin-top: 25px;
+        flex-wrap: wrap;
+    }
+
+        .calendar-legend span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #81889c;
+            font-size: 13px;
+        }
+
+    .legend-dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .high-dot {
+        background: #ef4444;
+    }
+
+    .medium-dot {
+        background: #f59e0b;
+    }
+
+    .low-dot {
+        background: #22c55e;
+    }
+
+    .selected-day-panel {
+        background: white;
+        padding: 28px;
+        border-radius: 22px;
+        box-shadow: 0 5px 25px rgba(30, 36, 64, 0.05);
+    }
+
+    .selected-day-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+        .selected-day-header h4 {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .selected-day-header p {
+            color: #969bad;
+            font-size: 13px;
+        }
+
+    .close-selection {
+        background: #f2efff;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 15px;
+        color: #6658f5;
+        cursor: pointer;
+    }
+
+    .selected-task {
+        background: #f8f9ff;
+        padding: 18px;
+        border-radius: 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 12px;
+    }
+
+    .selected-task-info h5 {
+        font-weight: 700;
+        font-size: 16px;
+        margin-bottom: 7px;
+    }
+
+    .selected-task-info p {
+        color: #8990a5;
+        font-size: 13px;
+        margin-bottom: 5px;
+    }
+
+    .selected-task-badges {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .calendar-priority {
+        padding: 8px 12px;
+        border-radius: 9px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .status-badge {
+        background: #eae5ff;
+        color: #6658f5;
+        padding: 8px 12px;
+        border-radius: 9px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .empty-calendar-day {
+        text-align: center;
+        padding: 35px;
+    }
+
+        .empty-calendar-day div {
+            font-size: 40px;
+        }
+
+        .empty-calendar-day h5 {
+            margin-top: 10px;
+            font-weight: 700;
+        }
+
+        .empty-calendar-day p {
+            color: #969bad;
+        }
+
+    @@media (max-width: 800px) {
+        .calendar-container
+
+    {
+        padding: 12px;
+        overflow-x: auto;
+    }
+
+    .calendar-grid {
+        min-width: 650px;
+    }
+
+    .calendar-title {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .selected-task {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    }
+</style>
+
+@code {
+    private readonly CultureInfo englishCulture =
+        CultureInfo.GetCultureInfo("en-US");
+
+    private DateTime currentMonth =
+        new(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+    private List<TaskItem> tasks = new();
+
+    private DateTime? selectedDate;
+
+    private readonly string[] weekDays =
+    {
+        "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
+    };
+
+    private int daysInMonth =>
+        DateTime.DaysInMonth(
+            currentMonth.Year,
+            currentMonth.Month);
+
+    private int firstDayOffset =>
+        ((int)currentMonth.DayOfWeek + 6) % 7;
+
+    private int MonthTaskCount =>
+        tasks.Count(t =>
+            t.DueDate.Year == currentMonth.Year &&
+            t.DueDate.Month == currentMonth.Month);
+
+    private List<TaskItem> SelectedTasks =>
+        selectedDate.HasValue
+            ? tasks
+                .Where(t =>
+                    t.DueDate.Date == selectedDate.Value.Date)
+                .OrderBy(t => t.DueDate)
+                .ToList()
+            : new List<TaskItem>();
+
+    protected override void OnInitialized()
+    {
+        tasks = TaskService.GetAll();
+    }
+
+    private void PreviousMonth()
+    {
+        currentMonth = currentMonth.AddMonths(-1);
+        selectedDate = null;
+    }
+
+    private void NextMonth()
+    {
+        currentMonth = currentMonth.AddMonths(1);
+        selectedDate = null;
+    }
+
+    private void SelectDate(DateTime date)
+    {
+        selectedDate = date;
+    }
+
+    private void ClearSelection()
+    {
+        selectedDate = null;
+    }
+}

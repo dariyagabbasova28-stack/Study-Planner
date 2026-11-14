@@ -1,0 +1,378 @@
+﻿@page "/settings"
+@rendermode InteractiveServer
+
+@using StudyMate.Models
+@using StudyMate.Services
+@inject AppState AppState
+
+
+<PageTitle>Settings - StudyMate</PageTitle>
+
+<div class="settings-page">
+
+    <div class="settings-header">
+        <h2>⚙️ Settings</h2>
+        <p>Personalize your StudyMate experience.</p>
+    </div>
+
+    @if (saved)
+    {
+        <div class="settings-success">
+            ✅ Your settings have been saved successfully!
+        </div>
+    }
+
+    <div class="settings-card">
+
+        <div class="settings-card-heading">
+            <span class="settings-heading-icon">👤</span>
+            <div>
+                <h3>Student Profile</h3>
+                <p>Tell us a little about yourself.</p>
+            </div>
+        </div>
+
+        <div class="settings-form">
+
+            <div class="settings-field">
+                <label>Full Name</label>
+                <input @bind="settings.StudentName"
+                       placeholder="Enter your full name" />
+            </div>
+
+            <div class="settings-field">
+                <label>University</label>
+                <input @bind="settings.University"
+                       placeholder="Enter your university" />
+            </div>
+
+            <div class="settings-field">
+                <label>Major / Program</label>
+                <input @bind="settings.Major"
+                       placeholder="Enter your major" />
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="settings-card">
+
+        <div class="settings-card-heading">
+            <span class="settings-heading-icon">🎨</span>
+            <div>
+                <h3>Appearance</h3>
+                <p>Choose your favorite color theme.</p>
+            </div>
+        </div>
+
+        <div class="theme-options">
+
+            @foreach (var theme in Themes)
+            {
+                <button class="theme-option @(settings.Theme == theme ? "selected" : "")"
+                        @onclick="() => SelectTheme(theme)">
+
+                    <span class="theme-color @theme.ToLowerInvariant()"></span>
+
+                    <span>@theme</span>
+
+                    @if (settings.Theme == theme)
+                    {
+                        <span>✓</span>
+                    }
+
+                </button>
+            }
+
+        </div>
+
+    </div>
+
+    <div class="settings-card">
+
+        <div class="settings-card-heading">
+            <span class="settings-heading-icon">🍅</span>
+            <div>
+                <h3>Pomodoro Settings</h3>
+                <p>Customize your study and break durations.</p>
+            </div>
+        </div>
+
+        <div class="settings-form">
+
+            <div class="settings-field">
+                <label>Focus Duration (minutes)</label>
+                <input type="number"
+                       min="1"
+                       max="120"
+                       @bind="settings.FocusMinutes" />
+            </div>
+
+            <div class="settings-field">
+                <label>Short Break (minutes)</label>
+                <input type="number"
+                       min="1"
+                       max="60"
+                       @bind="settings.ShortBreakMinutes" />
+            </div>
+
+            <div class="settings-field">
+                <label>Long Break (minutes)</label>
+                <input type="number"
+                       min="1"
+                       max="60"
+                       @bind="settings.LongBreakMinutes" />
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="settings-card">
+
+        <div class="settings-card-heading">
+            <span class="settings-heading-icon">🔔</span>
+            <div>
+                <h3>Notifications</h3>
+                <p>Manage your deadline reminders.</p>
+            </div>
+        </div>
+
+        <label class="settings-checkbox">
+            <input type="checkbox"
+                   @bind="settings.ShowReminders" />
+
+            <span>Show deadline reminders on Dashboard</span>
+        </label>
+
+    </div>
+
+    <button class="settings-save" @onclick="SaveSettings">
+        💾 Save Settings
+    </button>
+
+</div>
+
+<style>
+
+    .settings-page {
+        max-width: 1000px;
+        margin: auto;
+        padding: 15px 10px 50px;
+        color: #1e2440;
+    }
+
+    .settings-header {
+        margin-bottom: 30px;
+    }
+
+        .settings-header h2 {
+            font-size: 30px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .settings-header p {
+            color: #8990a5;
+        }
+
+    .settings-card {
+        background: white;
+        padding: 30px;
+        border-radius: 22px;
+        margin-bottom: 23px;
+        box-shadow: 0 5px 25px rgba(30, 36, 64, 0.05);
+    }
+
+    .settings-card-heading {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .settings-heading-icon {
+        width: 55px;
+        height: 55px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f0eaff;
+        border-radius: 15px;
+        font-size: 26px;
+    }
+
+    .settings-card-heading h3 {
+        font-size: 19px;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+
+    .settings-card-heading p {
+        color: #969bad;
+        font-size: 13px;
+        margin: 0;
+    }
+
+    .settings-form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .settings-field {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+    }
+
+        .settings-field label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #555d75;
+        }
+
+        .settings-field input {
+            border: 1px solid #e6e3f5;
+            border-radius: 12px;
+            padding: 13px 15px;
+            outline: none;
+            font-size: 14px;
+        }
+
+            .settings-field input:focus {
+                border-color: #6658f5;
+            }
+
+    .theme-options {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .theme-option {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: 2px solid #eae7f5;
+        background: white;
+        border-radius: 13px;
+        padding: 15px 20px;
+        cursor: pointer;
+        font-weight: 700;
+    }
+
+        .theme-option.selected {
+            border-color: #6658f5;
+            background: #f8f6ff;
+        }
+
+    .theme-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+    }
+
+        .theme-color.purple {
+            background: #6658f5;
+        }
+
+        .theme-color.pink {
+            background: #ec4899;
+        }
+
+        .theme-color.blue {
+            background: #3b82f6;
+        }
+
+    .settings-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+        .settings-checkbox input {
+            width: 18px;
+            height: 18px;
+            accent-color: #6658f5;
+        }
+
+    .settings-save {
+        background: linear-gradient(120deg, #6658f5, #9360f7);
+        color: white;
+        border: none;
+        border-radius: 13px;
+        padding: 15px 30px;
+        font-weight: 800;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .settings-success {
+        background: #dcfce7;
+        color: #15803d;
+        padding: 15px 20px;
+        border-radius: 13px;
+        margin-bottom: 20px;
+        font-weight: 700;
+    }
+
+    @@media (max-width: 650px) {
+        .settings-form {
+            grid-template-columns: 1fr;
+        }
+
+        .settings-card {
+            padding: 20px;
+        }
+    }
+
+</style>
+
+@code {
+
+    private AppSettings settings = new();
+
+    private bool saved;
+
+    private readonly string[] Themes =
+    {
+        "Purple",
+        "Pink",
+        "Blue"
+    };
+
+    protected override void OnInitialized()
+    {
+        var current = AppState.Settings;
+
+        settings = new AppSettings
+        {
+            Id = current.Id,
+            StudentName = current.StudentName,
+            University = current.University,
+            Major = current.Major,
+            Theme = current.Theme,
+            FocusMinutes = current.FocusMinutes,
+            ShortBreakMinutes = current.ShortBreakMinutes,
+            LongBreakMinutes = current.LongBreakMinutes,
+            ShowReminders = current.ShowReminders
+        };
+    }
+
+    private void SelectTheme(string theme)
+    {
+        settings.Theme = theme;
+        saved = false;
+    }
+
+    private void SaveSettings()
+    {
+        AppState.UpdateSettings(settings);
+        saved = true;
+    }
+}

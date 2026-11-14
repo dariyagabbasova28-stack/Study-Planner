@@ -1,0 +1,1073 @@
+﻿@page "/tasks"
+@rendermode InteractiveServer
+
+@using StudyMate.Models
+@using StudyMate.Services
+@using System.Globalization
+
+@inject TaskService TaskService
+@inject ValidationService ValidationService
+
+<PageTitle>My Tasks - StudyMate</PageTitle>
+
+<div class="tasks-page">
+
+    @if (!string.IsNullOrWhiteSpace(operationError))
+    {
+        <div class="tasks-error-banner" role="alert">
+            <span>⚠️ @operationError</span>
+            <button type="button"
+                    class="tasks-error-close"
+                    @onclick="() => operationError = string.Empty">
+                ✕
+            </button>
+        </div>
+    }
+
+    <div class="tasks-header">
+        <div>
+            <h2>📝 My Tasks</h2>
+            <p>Manage your assignments and stay on top of deadlines.</p>
+        </div>
+
+        <button class="tasks-primary-button" @onclick="ShowAddForm">
+            + Add New Task
+        </button>
+    </div>
+
+    <div class="tasks-stats">
+
+        <div class="tasks-stat-card">
+            <span class="tasks-stat-icon">📋</span>
+            <div>
+                <small>Total Tasks</small>
+                <h3>@tasks.Count</h3>
+            </div>
+        </div>
+
+        <div class="tasks-stat-card">
+            <span class="tasks-stat-icon">⏳</span>
+            <div>
+                <small>Pending</small>
+                <h3>@tasks.Count(t => t.Status == StudyTaskStatus.Pending)</h3>
+            </div>
+        </div>
+
+        <div class="tasks-stat-card">
+            <span class="tasks-stat-icon">🚀</span>
+            <div>
+                <small>In Progress</small>
+                <h3>@tasks.Count(t => t.Status == StudyTaskStatus.InProgress)</h3>
+            </div>
+        </div>
+
+        <div class="tasks-stat-card">
+            <span class="tasks-stat-icon">✅</span>
+            <div>
+                <small>Completed</small>
+                <h3>@tasks.Count(t => t.Status == StudyTaskStatus.Completed)</h3>
+            </div>
+        </div>
+
+    </div>
+
+    @if (showForm)
+    {
+        <div class="tasks-form-card">
+
+            <div class="tasks-section-header">
+                <h3>@(isEditing ? "✏️ Edit Task" : "✨ Add New Task")</h3>
+
+                <button type="button"
+                        class="tasks-close-button"
+                        @onclick="CancelEdit">
+                    ✕
+                </button>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(validationError))
+            {
+                <div class="tasks-validation-error" role="alert">
+                    ⚠️ @validationError
+                </div>
+            }
+
+            <EditForm Model="taskForm"
+                      OnValidSubmit="SaveTask"
+                      FormName="taskForm">
+
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="tasks-form-grid">
+
+                    <div class="tasks-field">
+                        <label>Task Title</label>
+                        <InputText class="form-control"
+                                   @bind-Value="taskForm.Title"
+                                   placeholder="Enter task title" />
+                    </div>
+
+                    <div class="tasks-field">
+                        <label>Subject</label>
+                        <InputText class="form-control"
+                                   @bind-Value="taskForm.Subject"
+                                   placeholder="e.g. Mathematics" />
+                    </div>
+
+                    <div class="tasks-field full-width">
+                        <label>Description</label>
+                        <InputTextArea class="form-control"
+                                       @bind-Value="taskForm.Description"
+                                       placeholder="Describe your assignment..."
+                                       rows="3" />
+                    </div>
+
+                    <div class="tasks-field">
+                        <label>Due Date</label>
+                        <InputDate class="form-control"
+                                   @bind-Value="taskForm.DueDate" />
+                    </div>
+
+                    <div class="tasks-field">
+                        <label>Priority</label>
+                        <InputSelect class="form-select"
+                                     @bind-Value="taskForm.Priority">
+
+                            @foreach (var priority in Enum.GetValues<StudyTaskPriority>())
+                            {
+                                <option value="@priority">@priority</option>
+                            }
+
+                        </InputSelect>
+                    </div>
+
+                    <div class="tasks-field">
+                        <label>Status</label>
+                        <InputSelect class="form-select"
+                                     @bind-Value="taskForm.Status">
+
+                            @foreach (var status in Enum.GetValues<StudyTaskStatus>())
+                            {
+                                <option value="@status">@status</option>
+                            }
+
+                    </InputSelect>
+                </div>
+
+            </div>
+
+            <div class="tasks-form-actions">
+
+                <button type="submit"
+                        class="tasks-primary-button"
+                        disabled="@isSaving">
+                    @(isSaving
+                                        ? "Saving..."
+                                        : isEditing
+                                        ? "Save Changes"
+                                        : "Create Task")
+                </button>
+
+                    <button type="button"
+                            class="tasks-secondary-button"
+                            @onclick="CancelEdit"
+                            disabled="@isSaving">
+                        Cancel
+                    </button>
+
+                </div>
+
+            </EditForm>
+
+        </div>
+        }
+
+    <div class="tasks-list-card">
+
+        <div class="tasks-section-header">
+            <div>
+                <h3>All Assignments</h3>
+                <p>@FilteredTasks.Count() tasks found</p>
+            </div>
+        </div>
+
+        <div class="tasks-filters">
+
+            <input class="form-control"
+                   placeholder="🔍 Search tasks..."
+                   @bind="searchText"
+                   @bind:event="oninput" />
+
+            <select class="form-select" @bind="statusFilter">
+                <option value="All">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="InProgress">In Progress</option>
+                <option value="Completed">Completed</option>
+            </select>
+
+            <select class="form-select" @bind="priorityFilter">
+                <option value="All">All Priorities</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+            </select>
+
+            <select class="form-select" @bind="sortOrder">
+                <option value="DueSoon">Due Date: Earliest</option>
+                <option value="DueLate">Due Date: Latest</option>
+                <option value="Priority">Priority: Highest</option>
+                <option value="Title">Title: A-Z</option>
+            </select>
+
+        </div>
+
+        @if (!FilteredTasks.Any())
+        {
+            <div class="tasks-empty">
+                <div>📭</div>
+                <h4>No tasks found</h4>
+                <p>Add a new task or change your filters.</p>
+            </div>
+        }
+        else
+        {
+            <div class="tasks-table-wrapper">
+
+                <table class="tasks-table">
+
+                    <thead>
+                        <tr>
+                            <th>Assignment</th>
+                            <th>Subject</th>
+                            <th>Due Date</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var task in FilteredTasks)
+                        {
+                            var isOverdue =
+                            task.DueDate.Date < DateTime.Today &&
+                            task.Status != StudyTaskStatus.Completed;
+
+                            <tr>
+
+                                <td>
+                                    <div class="tasks-title-cell">
+                                        <strong>@task.Title</strong>
+
+                                        @if (!string.IsNullOrWhiteSpace(task.Description))
+                                        {
+                                            <small>@task.Description</small>
+                                        }
+                                    </div>
+                                </td>
+
+                                <td>@task.Subject</td>
+
+                                <td>
+                                    <div class="tasks-date-cell">
+                                        @task.DueDate.ToString("dd MMM yyyy", englishCulture)
+
+                                        @if (isOverdue)
+                                        {
+                                            <span class="tasks-overdue">
+                                                Overdue
+                                            </span>
+                                        }
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="tasks-priority priority-@task.Priority.ToString().ToLowerInvariant()">
+                                    @task.Priority
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="tasks-status status-@task.Status.ToString().ToLowerInvariant()">
+                                    @(task.Status == StudyTaskStatus.InProgress
+                                                                    ? "In Progress"
+                                                                    : task.Status.ToString())
+                            </span>
+                        </td>
+
+                                <td>
+                                    <div class="tasks-actions">
+
+                                        <button class="tasks-action edit"
+                                                title="Edit"
+                                                @onclick="() => EditTask(task)">
+                                            ✏️
+                                        </button>
+
+                                @if (task.Status == StudyTaskStatus.Pending)
+                                        {
+                                            <button class="tasks-action progress-action"
+                                                    title="Start Task"
+                                                    @onclick="() => ChangeStatus(task, StudyTaskStatus.InProgress)">
+                                                ▶️
+                                            </button>
+                                        }
+
+                                        @if (task.Status != StudyTaskStatus.Completed)
+                                        {
+                                            <button class="tasks-action complete"
+                                                    title="Complete Task"
+                                                    @onclick="() => CompleteTask(task.Id)">
+                                                ✅
+                                            </button>
+                                        }
+
+                                        <button class="tasks-action delete"
+                                                title="Delete"
+                                                @onclick="() => RequestDelete(task.Id)">
+                                            🗑️
+                                        </button>
+
+                                    </div>
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+
+    </div>
+
+    @if (taskToDelete.HasValue)
+    {
+        <div class="tasks-modal-overlay">
+
+            <div class="tasks-modal">
+
+                <div class="tasks-modal-icon">🗑️</div>
+
+                <h3>Delete Task?</h3>
+
+                <p>
+                    Are you sure you want to delete this task?
+                    This action cannot be undone.
+                </p>
+
+                <div class="tasks-modal-actions">
+
+                    <button class="tasks-secondary-button"
+                            @onclick="CancelDelete">
+                        Cancel
+                    </button>
+
+                    <button class="tasks-danger-button"
+                            @onclick="ConfirmDelete">
+                        Yes, Delete
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+</div>
+
+<style>
+
+    .tasks-page {
+        padding: 15px 10px 40px;
+        max-width: 1500px;
+        margin: auto;
+        color: #1e2440;
+    }
+
+    .tasks-error-banner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+        padding: 14px 18px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .tasks-error-close {
+        background: transparent;
+        border: none;
+        color: #b91c1c;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .tasks-validation-error {
+        background: #fff1f2;
+        color: #be123c;
+        border: 1px solid #fecdd3;
+        padding: 13px 16px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .tasks-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 28px;
+    }
+
+        .tasks-header h2 {
+            font-size: 30px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .tasks-header p {
+            color: #8990a5;
+            margin: 0;
+        }
+
+    .tasks-primary-button {
+        background: linear-gradient(120deg, #6658f5, #9360f7);
+        color: white;
+        border: none;
+        padding: 12px 22px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 5px 15px rgba(102, 88, 245, 0.2);
+    }
+
+        .tasks-primary-button:hover {
+            opacity: 0.9;
+        }
+
+        .tasks-primary-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+    .tasks-secondary-button {
+        background: #f0eaff;
+        color: #6658f5;
+        border: none;
+        padding: 12px 22px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .tasks-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+        margin-bottom: 30px;
+    }
+
+    .tasks-stat-card {
+        background: white;
+        border-radius: 18px;
+        padding: 22px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        box-shadow: 0 5px 25px rgba(30, 36, 64, 0.05);
+    }
+
+    .tasks-stat-icon {
+        font-size: 28px;
+        background: #f0eaff;
+        width: 55px;
+        height: 55px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .tasks-stat-card small {
+        color: #8990a5;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .tasks-stat-card h3 {
+        font-size: 28px;
+        font-weight: 800;
+        margin: 5px 0 0;
+    }
+
+    .tasks-form-card,
+    .tasks-list-card {
+        background: white;
+        padding: 28px;
+        border-radius: 22px;
+        box-shadow: 0 5px 25px rgba(30, 36, 64, 0.05);
+        margin-bottom: 25px;
+    }
+
+    .tasks-section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+        .tasks-section-header h3 {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .tasks-section-header p {
+            color: #969bad;
+            font-size: 13px;
+            margin: 0;
+        }
+
+    .tasks-close-button {
+        background: #f0eaff;
+        color: #6658f5;
+        border: none;
+        padding: 9px 14px;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+
+    .tasks-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .tasks-field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+        .tasks-field label {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .tasks-field .form-control,
+        .tasks-field .form-select {
+            padding: 12px;
+            border: 1px solid #e6e5f0;
+            border-radius: 10px;
+        }
+
+            .tasks-field .form-control:focus,
+            .tasks-field .form-select:focus {
+                border-color: #9360f7;
+                box-shadow: 0 0 0 3px rgba(147, 96, 247, 0.12);
+            }
+
+    .full-width {
+        grid-column: 1 / -1;
+    }
+
+    .tasks-form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 25px;
+    }
+
+    .tasks-filters {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 25px;
+    }
+
+        .tasks-filters .form-control,
+        .tasks-filters .form-select {
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #e6e5f0;
+        }
+
+    .tasks-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .tasks-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 850px;
+    }
+
+        .tasks-table th {
+            background: #f8f7ff;
+            color: #8990a5;
+            padding: 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .tasks-table td {
+            padding: 18px 16px;
+            border-bottom: 1px solid #f1eff8;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+        .tasks-table tbody tr:hover {
+            background: #faf9ff;
+        }
+
+    .tasks-title-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+        .tasks-title-cell strong {
+            font-size: 14px;
+        }
+
+        .tasks-title-cell small {
+            color: #969bad;
+            max-width: 250px;
+            overflow-wrap: anywhere;
+        }
+
+    .tasks-date-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .tasks-overdue {
+        color: #dc2626;
+        background: #fee2e2;
+        padding: 4px 7px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 700;
+        width: fit-content;
+    }
+
+    .tasks-priority,
+    .tasks-status {
+        display: inline-block;
+        padding: 7px 11px;
+        border-radius: 9px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+        .tasks-priority.priority-high {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .tasks-priority.priority-medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .tasks-priority.priority-low {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .tasks-status.status-pending {
+            background: #fff3df;
+            color: #d97706;
+        }
+
+        .tasks-status.status-inprogress {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .tasks-status.status-completed {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+    .tasks-actions {
+        display: flex;
+        gap: 6px;
+    }
+
+    .tasks-action {
+        border: none;
+        border-radius: 9px;
+        padding: 9px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+        .tasks-action:hover {
+            transform: translateY(-2px);
+        }
+
+        .tasks-action.edit {
+            background: #f0eaff;
+        }
+
+        .tasks-action.progress-action {
+            background: #dbeafe;
+        }
+
+        .tasks-action.complete {
+            background: #dcfce7;
+        }
+
+        .tasks-action.delete {
+            background: #fee2e2;
+        }
+
+    .tasks-empty {
+        text-align: center;
+        padding: 50px 20px;
+    }
+
+        .tasks-empty div {
+            font-size: 45px;
+            margin-bottom: 10px;
+        }
+
+        .tasks-empty h4 {
+            font-weight: 800;
+        }
+
+        .tasks-empty p {
+            color: #969bad;
+        }
+
+    .tasks-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(20, 20, 40, 0.45);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .tasks-modal {
+        background: white;
+        padding: 35px;
+        border-radius: 22px;
+        width: 90%;
+        max-width: 430px;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+
+    .tasks-modal-icon {
+        font-size: 45px;
+        margin-bottom: 15px;
+    }
+
+    .tasks-modal h3 {
+        font-weight: 800;
+        margin-bottom: 12px;
+    }
+
+    .tasks-modal p {
+        color: #8990a5;
+        font-size: 14px;
+    }
+
+    .tasks-modal-actions {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 25px;
+    }
+
+    .tasks-danger-button {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 12px 22px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    @@media (max-width: 1100px) {
+        .tasks-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .tasks-filters {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 650px) {
+        .tasks-stats,
+        .tasks-form-grid,
+        .tasks-filters {
+            grid-template-columns: 1fr;
+        }
+
+        .tasks-form-card,
+        .tasks-list-card {
+            padding: 18px;
+        }
+    }
+
+</style>
+
+@code {
+
+    private readonly CultureInfo englishCulture =
+        CultureInfo.GetCultureInfo("en-US");
+
+    private List<TaskItem> tasks = new();
+
+    private TaskItem taskForm = new();
+
+    private bool isEditing = false;
+    private bool showForm = false;
+    private bool isSaving = false;
+
+    private int? taskToDelete;
+
+    private string searchText = "";
+    private string statusFilter = "All";
+    private string priorityFilter = "All";
+    private string sortOrder = "DueSoon";
+
+    private string validationError = "";
+    private string operationError = "";
+
+    protected override void OnInitialized()
+    {
+        LoadTasks();
+        ResetForm();
+    }
+
+    private void LoadTasks()
+    {
+        try
+        {
+            tasks = TaskService.GetAll();
+        }
+        catch (Exception)
+        {
+            operationError = "Unable to load tasks. Please try again.";
+        }
+    }
+
+    private IEnumerable<TaskItem> FilteredTasks
+    {
+        get
+        {
+            var result = tasks.Where(t =>
+                (string.IsNullOrWhiteSpace(searchText) ||
+                 (t.Title?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                 (t.Subject?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                 (t.Description?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false))
+                &&
+                (statusFilter == "All" ||
+                 t.Status.ToString() == statusFilter)
+                &&
+                (priorityFilter == "All" ||
+                 t.Priority.ToString() == priorityFilter)
+            );
+
+            return sortOrder switch
+            {
+                "DueLate" => result.OrderByDescending(t => t.DueDate),
+                "Priority" => result.OrderByDescending(t => t.Priority),
+                "Title" => result.OrderBy(t => t.Title),
+                _ => result.OrderBy(t => t.DueDate)
+            };
+        }
+    }
+
+    private void SaveTask()
+    {
+        if (isSaving)
+            return;
+
+        validationError = "";
+        operationError = "";
+
+        var result = ValidationService.ValidateTask(taskForm);
+
+        if (!result.IsValid)
+        {
+            validationError = result.ErrorMessage;
+            return;
+        }
+
+        isSaving = true;
+
+        try
+        {
+            taskForm.Title = taskForm.Title.Trim();
+            taskForm.Subject = taskForm.Subject.Trim();
+
+            if (isEditing)
+            {
+                TaskService.Update(taskForm);
+            }
+            else
+            {
+                TaskService.Add(taskForm);
+            }
+
+            LoadTasks();
+            CancelEdit();
+        }
+        catch (Exception)
+        {
+            operationError = "Unable to save the task. Please try again.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void ShowAddForm()
+    {
+        ResetForm();
+
+        validationError = "";
+        operationError = "";
+
+        isEditing = false;
+        showForm = true;
+    }
+
+    private void EditTask(TaskItem task)
+    {
+        validationError = "";
+        operationError = "";
+
+        taskForm = new TaskItem
+        {
+            Id = task.Id,
+            Title = task.Title,
+            Subject = task.Subject,
+            Description = task.Description,
+            DueDate = task.DueDate,
+            Priority = task.Priority,
+            Status = task.Status
+        };
+
+        isEditing = true;
+        showForm = true;
+    }
+
+    private void CancelEdit()
+    {
+        ResetForm();
+
+        validationError = "";
+
+        isEditing = false;
+        showForm = false;
+    }
+
+    private void ResetForm()
+    {
+        taskForm = new TaskItem
+        {
+            DueDate = DateTime.Today,
+            Priority = StudyTaskPriority.Medium,
+            Status = StudyTaskStatus.Pending
+        };
+    }
+
+    private void RequestDelete(int id)
+    {
+        operationError = "";
+        taskToDelete = id;
+    }
+
+    private void CancelDelete()
+    {
+        taskToDelete = null;
+    }
+
+    private void ConfirmDelete()
+    {
+        if (!taskToDelete.HasValue)
+            return;
+
+        try
+        {
+            TaskService.Delete(taskToDelete.Value);
+            LoadTasks();
+
+            taskToDelete = null;
+        }
+        catch (Exception)
+        {
+            operationError = "Unable to delete the task. Please try again.";
+            taskToDelete = null;
+        }
+    }
+
+    private void CompleteTask(int id)
+    {
+        operationError = "";
+
+        try
+        {
+            TaskService.MarkCompleted(id);
+            LoadTasks();
+        }
+        catch (Exception)
+        {
+            operationError = "Unable to complete the task. Please try again.";
+        }
+    }
+
+    private void ChangeStatus(TaskItem task, StudyTaskStatus status)
+    {
+        operationError = "";
+
+        var updatedTask = new TaskItem
+        {
+            Id = task.Id,
+            Title = task.Title,
+            Subject = task.Subject,
+            Description = task.Description,
+            DueDate = task.DueDate,
+            Priority = task.Priority,
+            Status = status
+        };
+
+        try
+        {
+            TaskService.Update(updatedTask);
+            LoadTasks();
+        }
+        catch (Exception)
+        {
+            operationError = "Unable to update task status. Please try again.";
+        }
+    }
+}

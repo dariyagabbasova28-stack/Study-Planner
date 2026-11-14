@@ -1,0 +1,625 @@
+﻿@page "/focus"
+@rendermode InteractiveServer
+@implements IAsyncDisposable
+
+@using System.Threading
+@using StudyMate.Services
+@using StudyMate.Models
+
+@inject AppState AppState
+@inject PomodoroService PomodoroService
+
+<PageTitle>Focus Timer - StudyMate</PageTitle>
+
+<div class="focus-page">
+
+    <div class="focus-header">
+        <h2>🍅 Focus Timer</h2>
+        <p>Stay focused, study smarter, and achieve your goals.</p>
+    </div>
+
+    <div class="focus-layout">
+
+        <div class="focus-timer-card">
+
+            <div class="focus-modes">
+
+                <button class="@(mode == "Focus" ? "active" : "")"
+                        @onclick='() => ChangeMode("Focus")'>
+                    Focus
+                </button>
+
+                <button class="@(mode == "Short Break" ? "active" : "")"
+                        @onclick='() => ChangeMode("Short Break")'>
+                    Short Break
+                </button>
+
+                <button class="@(mode == "Long Break" ? "active" : "")"
+                        @onclick='() => ChangeMode("Long Break")'>
+                    Long Break
+                </button>
+
+            </div>
+
+            <div class="timer-circle"
+                 style="background: conic-gradient(var(--theme-primary, #735cf5) @(ProgressPercentage)%, #eeeaff 0);">
+
+                <div class="timer-circle-inner">
+
+                    <div class="timer-icon">
+                        @(mode == "Focus" ? "🍅" : "☕")
+                    </div>
+
+                    <div class="timer-display">
+                        @TimeDisplay
+                    </div>
+
+                    <div class="timer-label">
+                        @mode
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="timer-controls">
+
+                <button class="timer-secondary"
+                        @onclick="ResetTimer"
+                        disabled="@isSaving">
+                    ↺ Reset
+                </button>
+
+                @if (isRunning)
+                {
+                    <button class="timer-primary"
+                            @onclick="PauseTimer">
+                        ⏸ Pause
+                    </button>
+                }
+                else
+                {
+                    <button class="timer-primary"
+                            @onclick="StartTimer"
+                            disabled="@isSaving">
+                        ▶ Start
+                    </button>
+                }
+
+            </div>
+
+            <p class="timer-message">
+                @MotivationMessage
+            </p>
+
+            @if (!string.IsNullOrEmpty(saveMessage))
+            {
+                <div class="save-message">
+                    @saveMessage
+                </div>
+            }
+
+            <div class="focus-settings-info">
+
+                ⚙️ Focus: @settings.FocusMinutes min ·
+                Short Break: @settings.ShortBreakMinutes min ·
+                Long Break: @settings.LongBreakMinutes min
+
+                <a href="/settings">Edit Settings</a>
+
+            </div>
+
+        </div>
+
+        <div class="focus-sidebar">
+
+            <div class="focus-stat-card">
+
+                <div class="focus-stat-icon">🔥</div>
+
+                <h3>@completedSessions</h3>
+                <p>Completed Pomodoros</p>
+
+            </div>
+
+            <div class="focus-stat-card">
+
+                <div class="focus-stat-icon">⏱️</div>
+
+                <h3>@totalFocusMinutes min</h3>
+                <p>Total Focus Time</p>
+
+            </div>
+
+            <div class="focus-tips-card">
+
+                <h4>💡 Study Tips</h4>
+
+                <div class="focus-tip">
+                    🎯 Focus on one task at a time.
+                </div>
+
+                <div class="focus-tip">
+                    📵 Avoid distractions during study sessions.
+                </div>
+
+                <div class="focus-tip">
+                    ☕ Take regular breaks to recharge.
+                </div>
+
+                <div class="focus-tip">
+                    🌟 Consistency is the key to success.
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+
+    .focus-page {
+        padding: 15px 10px 40px;
+        max-width: 1400px;
+        margin: auto;
+        color: #1e2440;
+    }
+
+    .focus-header {
+        margin-bottom: 30px;
+    }
+
+        .focus-header h2 {
+            font-size: 30px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .focus-header p {
+            color: #8990a5;
+        }
+
+    .focus-layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 25px;
+    }
+
+    .focus-timer-card {
+        background: white;
+        border-radius: 24px;
+        padding: 35px;
+        box-shadow: 0 5px 25px rgba(30, 36, 64, 0.05);
+        text-align: center;
+    }
+
+    .focus-modes {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 35px;
+    }
+
+        .focus-modes button {
+            border: none;
+            background: var(--theme-soft, #f2efff);
+            color: var(--theme-primary, #6658f5);
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+            .focus-modes button.active {
+                background: var(--theme-primary, #6658f5);
+                color: white;
+            }
+
+    .timer-circle {
+        width: 310px;
+        height: 310px;
+        border-radius: 50%;
+        padding: 12px;
+        margin: 0 auto 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .timer-circle-inner {
+        background: white;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .timer-icon {
+        font-size: 38px;
+        margin-bottom: 10px;
+    }
+
+    .timer-display {
+        font-size: 65px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        color: var(--theme-primary, #6658f5);
+    }
+
+    .timer-label {
+        color: #969bad;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    .timer-controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .timer-primary {
+        background: linear-gradient( 120deg, var(--theme-primary, #6658f5), var(--theme-secondary, #9360f7) );
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 14px 35px;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .timer-secondary {
+        background: var(--theme-soft, #f2efff);
+        color: var(--theme-primary, #6658f5);
+        border: none;
+        border-radius: 12px;
+        padding: 14px 25px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+        .timer-primary:disabled,
+        .timer-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+    .timer-message {
+        color: #8990a5;
+        font-size: 14px;
+    }
+
+    .save-message {
+        margin-top: 15px;
+        padding: 12px;
+        background: #ecfdf5;
+        color: #15803d;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .focus-settings-info {
+        margin-top: 22px;
+        padding: 15px;
+        background: #f8f7ff;
+        border-radius: 12px;
+        font-size: 12px;
+        color: #777d96;
+        line-height: 1.8;
+    }
+
+        .focus-settings-info a {
+            display: inline-block;
+            margin-left: 8px;
+            color: var(--theme-primary, #6658f5);
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+    .focus-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .focus-stat-card,
+    .focus-tips-card {
+        background: white;
+        border-radius: 22px;
+        padding: 28px;
+        box-shadow: 0 5px 25px rgba(30, 36, 64, 0.05);
+    }
+
+    .focus-stat-card {
+        text-align: center;
+    }
+
+    .focus-stat-icon {
+        font-size: 35px;
+        margin-bottom: 10px;
+    }
+
+    .focus-stat-card h3 {
+        font-size: 35px;
+        font-weight: 800;
+        color: var(--theme-primary, #6658f5);
+    }
+
+    .focus-stat-card p {
+        color: #969bad;
+        font-size: 13px;
+    }
+
+    .focus-tips-card h4 {
+        font-weight: 800;
+        margin-bottom: 20px;
+    }
+
+    .focus-tip {
+        background: #f8f7ff;
+        border-radius: 12px;
+        padding: 13px;
+        margin-bottom: 10px;
+        font-size: 13px;
+        color: #555d75;
+    }
+
+    @@media (max-width: 900px) {
+        .focus-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 500px) {
+        .timer-circle {
+            width: 250px;
+            height: 250px;
+        }
+
+        .timer-display {
+            font-size: 48px;
+        }
+
+        .focus-timer-card {
+            padding: 20px;
+        }
+    }
+
+</style>
+
+@code {
+
+    private AppSettings settings = new();
+
+    private string mode = "Focus";
+
+    private int durationSeconds = 25 * 60;
+    private int remainingSeconds = 25 * 60;
+
+    private bool isRunning;
+    private bool isSaving;
+
+    private int completedSessions;
+    private int totalFocusMinutes;
+
+    private System.Threading.Timer? timer;
+    private DateTimeOffset? finishTime;
+
+    private string saveMessage = "";
+
+    private string TimeDisplay =>
+        $"{remainingSeconds / 60:D2}:{remainingSeconds % 60:D2}";
+
+    private int ProgressPercentage =>
+        durationSeconds == 0
+            ? 0
+            : (int)Math.Round(
+                (durationSeconds - remainingSeconds) * 100.0
+                / durationSeconds);
+
+    private string MotivationMessage =>
+        mode switch
+        {
+            "Focus" => "Stay focused. You've got this! 💜",
+            "Short Break" => "Take a break and recharge. ☕",
+            "Long Break" => "Great work! Enjoy your well-deserved break. 🌿",
+            _ => "Keep going!"
+        };
+
+    protected override void OnInitialized()
+    {
+        LoadSettings();
+        LoadStatistics();
+
+        AppState.OnChange += HandleSettingsChanged;
+    }
+
+    // LOAD SETTINGS FROM CENTRALIZED STATE
+
+    private void LoadSettings()
+    {
+        settings = AppState.Settings;
+
+        durationSeconds = GetModeMinutes(mode) * 60;
+        remainingSeconds = durationSeconds;
+    }
+
+    // REACT TO SETTINGS CHANGES
+
+    private void HandleSettingsChanged()
+    {
+        _ = InvokeAsync(() =>
+        {
+            settings = AppState.Settings;
+
+            // Preserve the current session if it is running or paused.
+            // New durations apply when the timer is reset or mode changes.
+            if (!isRunning && remainingSeconds == durationSeconds)
+            {
+                durationSeconds = GetModeMinutes(mode) * 60;
+                remainingSeconds = durationSeconds;
+            }
+
+            StateHasChanged();
+        });
+    }
+
+    private int GetModeMinutes(string selectedMode)
+    {
+        return selectedMode switch
+        {
+            "Focus" => Math.Clamp(settings.FocusMinutes, 1, 120),
+            "Short Break" => Math.Clamp(settings.ShortBreakMinutes, 1, 60),
+            "Long Break" => Math.Clamp(settings.LongBreakMinutes, 1, 60),
+            _ => 25
+        };
+    }
+
+    private void LoadStatistics()
+    {
+        completedSessions = PomodoroService.GetTotalSessions();
+        totalFocusMinutes = PomodoroService.GetTotalMinutes();
+    }
+
+    private void StartTimer()
+    {
+        if (isRunning || isSaving)
+            return;
+
+        if (remainingSeconds <= 0)
+            remainingSeconds = durationSeconds;
+
+        saveMessage = "";
+        isRunning = true;
+
+        finishTime = DateTimeOffset.UtcNow.AddSeconds(remainingSeconds);
+
+        timer?.Dispose();
+
+        timer = new System.Threading.Timer(
+            _ => _ = InvokeAsync(Tick),
+            null,
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(1));
+    }
+
+    private void Tick()
+    {
+        if (!isRunning || finishTime == null)
+            return;
+
+        remainingSeconds = Math.Max(
+            0,
+            (int)Math.Ceiling(
+                (finishTime.Value - DateTimeOffset.UtcNow)
+                .TotalSeconds));
+
+        if (remainingSeconds == 0)
+        {
+            isRunning = false;
+
+            timer?.Dispose();
+            timer = null;
+            finishTime = null;
+
+            if (mode == "Focus" && !isSaving)
+            {
+                isSaving = true;
+
+                try
+                {
+                    PomodoroService.AddSession(durationSeconds / 60);
+
+                    LoadStatistics();
+
+                    saveMessage = "🎉 Focus session completed and saved!";
+                }
+                catch (Exception)
+                {
+                    saveMessage = "⚠️ Session completed, but saving failed.";
+                }
+                finally
+                {
+                    isSaving = false;
+                }
+            }
+            else
+            {
+                saveMessage = "☕ Break completed!";
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    private void PauseTimer()
+    {
+        if (!isRunning || finishTime == null)
+            return;
+
+        remainingSeconds = Math.Max(
+            0,
+            (int)Math.Ceiling(
+                (finishTime.Value - DateTimeOffset.UtcNow)
+                .TotalSeconds));
+
+        isRunning = false;
+        finishTime = null;
+
+        timer?.Dispose();
+        timer = null;
+    }
+
+    private void ResetTimer()
+    {
+        if (isSaving)
+            return;
+
+        isRunning = false;
+        finishTime = null;
+
+        timer?.Dispose();
+        timer = null;
+
+        // Apply the latest duration from AppState.
+        settings = AppState.Settings;
+        durationSeconds = GetModeMinutes(mode) * 60;
+
+        remainingSeconds = durationSeconds;
+        saveMessage = "";
+    }
+
+    private void ChangeMode(string newMode)
+    {
+        if (isSaving)
+            return;
+
+        ResetTimer();
+
+        mode = newMode;
+
+        durationSeconds = GetModeMinutes(mode) * 60;
+        remainingSeconds = durationSeconds;
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        AppState.OnChange -= HandleSettingsChanged;
+
+        isRunning = false;
+
+        timer?.Dispose();
+        timer = null;
+
+        return ValueTask.CompletedTask;
+    }
+}

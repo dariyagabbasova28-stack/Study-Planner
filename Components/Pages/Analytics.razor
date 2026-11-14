@@ -1,0 +1,1090 @@
+﻿@page "/analytics"
+@rendermode InteractiveServer
+
+@using StudyMate.Models
+@using StudyMate.Services
+@using StudyMate.Components.Shared
+@using System.Globalization
+
+@inject TaskService TaskService
+@inject PomodoroService PomodoroService
+
+<PageTitle>Analytics - StudyMate</PageTitle>
+
+<div class="analytics-page">
+
+    <!-- HEADER -->
+    <div class="analytics-header">
+        <div>
+            <h2>📊 Study Analytics</h2>
+            <p>Understand your progress and improve your productivity.</p>
+        </div>
+
+        <button class="analytics-refresh" @onclick="LoadData">
+            ↻ Refresh Data
+        </button>
+    </div>
+
+    <!-- REUSABLE TASK STATISTICS -->
+    <div class="analytics-stats">
+
+        <StatCard Icon="📋"
+                  Value="@TotalTasks.ToString()"
+                  Title="Total Tasks"
+                  Description="All assignments" />
+
+        <StatCard Icon="✅"
+                  Value="@CompletedTasks.ToString()"
+                  Title="Completed"
+                  Description="Finished assignments" />
+
+        <StatCard Icon="🚀"
+                  Value="@InProgressTasks.ToString()"
+                  Title="In Progress"
+                  Description="Currently working on" />
+
+        <StatCard Icon="⏳"
+                  Value="@PendingTasks.ToString()"
+                  Title="Pending"
+                  Description="Waiting to be started" />
+
+    </div>
+
+    <!-- TASK ANALYTICS -->
+    <div class="analytics-grid">
+
+        <!-- TASK COMPLETION -->
+        <div class="analytics-card">
+
+            <h3>🎯 Task Completion</h3>
+            <p>Overall progress across all assignments</p>
+
+            <div class="analytics-donut" style="@DonutStyle">
+
+                <div class="analytics-donut-inner">
+                    <strong>@CompletedPercentage%</strong>
+                    <span>Completed</span>
+                </div>
+
+            </div>
+
+            <div class="analytics-legend">
+
+                <div>
+                    <span class="analytics-dot green-dot"></span>
+                    Completed
+                    <strong>@CompletedTasks</strong>
+                </div>
+
+                <div>
+                    <span class="analytics-dot blue-dot"></span>
+                    In Progress
+                    <strong>@InProgressTasks</strong>
+                </div>
+
+                <div>
+                    <span class="analytics-dot orange-dot"></span>
+                    Pending
+                    <strong>@PendingTasks</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- PRIORITY -->
+        <div class="analytics-card">
+
+            <h3>⚡ Tasks by Priority</h3>
+            <p>Distribution of your assignment priorities</p>
+
+            <div class="analytics-bars">
+
+                <div class="analytics-bar-item">
+
+                    <div class="analytics-bar-label">
+                        <span>🔴 High Priority</span>
+                        <strong>@HighPriorityTasks</strong>
+                    </div>
+
+                    <div class="analytics-bar-track">
+                        <div class="analytics-bar-fill high"
+                             style="width: @(GetBarWidth(HighPriorityTasks))%">
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="analytics-bar-item">
+
+                    <div class="analytics-bar-label">
+                        <span>🟠 Medium Priority</span>
+                        <strong>@MediumPriorityTasks</strong>
+                    </div>
+
+                    <div class="analytics-bar-track">
+                        <div class="analytics-bar-fill medium"
+                             style="width: @(GetBarWidth(MediumPriorityTasks))%">
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="analytics-bar-item">
+
+                    <div class="analytics-bar-label">
+                        <span>🟢 Low Priority</span>
+                        <strong>@LowPriorityTasks</strong>
+                    </div>
+
+                    <div class="analytics-bar-track">
+                        <div class="analytics-bar-fill low"
+                             style="width: @(GetBarWidth(LowPriorityTasks))%">
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="analytics-insight">
+                💡 Focus on high-priority tasks first to stay productive.
+            </div>
+
+        </div>
+
+        <!-- SUBJECT PERFORMANCE -->
+        <div class="analytics-card">
+
+            <h3>📚 Subject Performance</h3>
+            <p>Completion progress for each course</p>
+
+            @if (!SubjectStats.Any())
+            {
+                <div class="analytics-empty">
+                    No subjects available yet.
+                </div>
+            }
+            else
+            {
+                @foreach (var subject in SubjectStats)
+                {
+                    <div class="analytics-subject">
+
+                        <div class="analytics-subject-header">
+                            <strong>@subject.Name</strong>
+                            <span>
+                                @subject.Completed / @subject.Total tasks
+                            </span>
+                        </div>
+
+                        <div class="analytics-bar-track">
+                            <div class="analytics-bar-fill subject"
+                                 style="width: @(subject.Progress)%">
+                            </div>
+                        </div>
+
+                        <small>@subject.Progress% completed</small>
+
+                    </div>
+                }
+            }
+
+        </div>
+
+        <!-- DEADLINES -->
+        <div class="analytics-card">
+
+            <h3>📅 Deadline Overview</h3>
+            <p>Stay ahead of upcoming assignments</p>
+
+            <div class="analytics-deadline">
+
+                <div class="deadline-icon overdue">🚨</div>
+
+                <div>
+                    <strong>Overdue Tasks</strong>
+                    <span>Past deadline and not completed</span>
+                </div>
+
+                <h4>@OverdueTasks</h4>
+
+            </div>
+
+            <div class="analytics-deadline">
+
+                <div class="deadline-icon today">📌</div>
+
+                <div>
+                    <strong>Due Today</strong>
+                    <span>Assignments due today</span>
+                </div>
+
+                <h4>@DueTodayTasks</h4>
+
+            </div>
+
+            <div class="analytics-deadline">
+
+                <div class="deadline-icon upcoming">📆</div>
+
+                <div>
+                    <strong>Next 7 Days</strong>
+                    <span>Upcoming deadlines</span>
+                </div>
+
+                <h4>@UpcomingTasks</h4>
+
+            </div>
+
+            <div class="analytics-summary">
+                @SummaryMessage
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- POMODORO SECTION -->
+    <div class="pomodoro-section">
+
+        <div class="pomodoro-section-heading">
+            <h2>🍅 Focus & Productivity</h2>
+            <p>Track your study sessions and build better habits.</p>
+        </div>
+
+        <!-- REUSABLE POMODORO STATISTICS -->
+        <div class="pomodoro-stats">
+
+            <StatCard Icon="🍅"
+                      Value="@TotalPomodoros.ToString()"
+                      Title="Completed Pomodoros"
+                      Description="All completed focus sessions" />
+
+            <StatCard Icon="⏱️"
+                      Value="@TotalFocusMinutes.ToString()"
+                      Title="Total Focus Minutes"
+                      Description="@FormattedFocusTime" />
+
+            <StatCard Icon="📅"
+                      Value="@WeeklyFocusMinutes.ToString()"
+                      Title="This Week"
+                      Description="Focus minutes in the last 7 days" />
+
+            <StatCard Icon="🔥"
+                      Value="@StudyStreak.ToString()"
+                      Title="Study Streak"
+                      Description="Consecutive study days" />
+
+        </div>
+
+        <!-- WEEKLY ACTIVITY -->
+        <div class="analytics-card weekly-activity-card">
+
+            <div class="weekly-header">
+
+                <div>
+                    <h3>📊 Weekly Study Activity</h3>
+                    <p>Focus minutes over the last 7 days</p>
+                </div>
+
+                <span class="weekly-badge">
+                    @WeeklyFocusMinutes min this week
+                </span>
+
+            </div>
+
+            @if (TotalPomodoros == 0)
+            {
+                <div class="analytics-empty">
+
+                    <div class="empty-emoji">🍅</div>
+
+                    <h4>No focus sessions yet</h4>
+
+                    <p>
+                        Complete your first Pomodoro session
+                        to see your study activity here.
+                    </p>
+
+                    <a href="/focus" class="focus-link">
+                        Start Focus Timer →
+                    </a>
+
+                </div>
+            }
+            else
+            {
+                <div class="weekly-chart">
+
+                    @foreach (var day in WeeklyActivity)
+                    {
+                        <div class="weekly-day">
+
+                            <div class="weekly-value">
+                                @day.Minutes min
+                            </div>
+
+                            <div class="weekly-bar-area">
+
+                                <div class="weekly-bar @(day.IsToday ? "today-bar" : "")"
+                                     style="height: @(GetWeeklyBarHeight(day.Minutes))%">
+                                </div>
+
+                            </div>
+
+                            <div class="weekly-day-label">
+                                @day.Label
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+
+                <div class="weekly-chart-footer">
+                    <span>📈 Your study activity</span>
+                    <span>Total: @WeeklyFocusMinutes minutes</span>
+                </div>
+            }
+
+        </div>
+
+        <!-- PRODUCTIVITY INSIGHT -->
+        <div class="productivity-insight">
+
+            <div class="productivity-insight-icon">💜</div>
+
+            <div>
+                <h4>Your Productivity Insight</h4>
+                <p>@ProductivityMessage</p>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+
+    .analytics-page {
+        padding: 15px 10px 40px;
+        max-width: 1500px;
+        margin: auto;
+        color: #1e2440;
+    }
+
+    .analytics-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 30px;
+    }
+
+        .analytics-header h2 {
+            font-size: 30px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .analytics-header p {
+            color: #8990a5;
+            margin: 0;
+        }
+
+    .analytics-refresh {
+        background: linear-gradient( 120deg, var(--theme-primary, #6658f5), var(--theme-secondary, #9360f7) );
+        color: white;
+        border: none;
+        padding: 12px 22px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+        .analytics-refresh:hover {
+            opacity: 0.9;
+        }
+
+    /* REUSABLE STATISTICS */
+
+    .analytics-stats,
+    .pomodoro-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+        margin-bottom: 25px;
+    }
+
+    /* ANALYTICS GRID */
+
+    .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+    }
+
+    .analytics-card {
+        background: white;
+        border-radius: 22px;
+        padding: 28px;
+        box-shadow: 0 5px 25px rgba(30, 36, 64, 0.05);
+        min-width: 0;
+    }
+
+        .analytics-card h3 {
+            font-size: 21px;
+            font-weight: 800;
+            margin-bottom: 7px;
+        }
+
+        .analytics-card > p {
+            color: #969bad;
+            font-size: 13px;
+            margin-bottom: 30px;
+        }
+
+    /* DONUT */
+
+    .analytics-donut {
+        width: 230px;
+        height: 230px;
+        border-radius: 50%;
+        padding: 22px;
+        margin: 0 auto 30px;
+    }
+
+    .analytics-donut-inner {
+        width: 100%;
+        height: 100%;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .analytics-donut-inner strong {
+            font-size: 43px;
+            color: var(--theme-primary, #6658f5);
+            font-weight: 800;
+        }
+
+        .analytics-donut-inner span {
+            color: #969bad;
+            font-size: 13px;
+        }
+
+    .analytics-legend {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+        .analytics-legend div {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 12px;
+            color: #8990a5;
+        }
+
+        .analytics-legend strong {
+            color: #1e2440;
+        }
+
+    .analytics-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .green-dot {
+        background: #22c55e;
+    }
+
+    .blue-dot {
+        background: #3b82f6;
+    }
+
+    .orange-dot {
+        background: #f59e0b;
+    }
+
+    /* PRIORITY BARS */
+
+    .analytics-bars {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        margin-top: 40px;
+    }
+
+    .analytics-bar-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    .analytics-bar-track {
+        height: 12px;
+        background: #f0eff8;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .analytics-bar-fill {
+        height: 100%;
+        border-radius: 20px;
+        transition: width 0.3s;
+    }
+
+        .analytics-bar-fill.high {
+            background: #ef4444;
+        }
+
+        .analytics-bar-fill.medium {
+            background: #f59e0b;
+        }
+
+        .analytics-bar-fill.low {
+            background: #22c55e;
+        }
+
+        .analytics-bar-fill.subject {
+            background: linear-gradient( 90deg, var(--theme-primary, #6658f5), var(--theme-secondary, #a477ff) );
+        }
+
+    .analytics-insight {
+        background: var(--theme-soft, #f5f1ff);
+        color: var(--theme-primary, #6658f5);
+        padding: 17px;
+        border-radius: 12px;
+        margin-top: 40px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    /* SUBJECTS */
+
+    .analytics-subject {
+        margin-bottom: 23px;
+    }
+
+    .analytics-subject-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+        font-size: 13px;
+    }
+
+        .analytics-subject-header span,
+        .analytics-subject small {
+            color: #969bad;
+        }
+
+    .analytics-subject small {
+        display: block;
+        margin-top: 7px;
+        font-size: 11px;
+    }
+
+    /* DEADLINES */
+
+    .analytics-deadline {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        background: #fafaff;
+        padding: 17px;
+        border-radius: 14px;
+        margin-bottom: 13px;
+    }
+
+    .deadline-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+    }
+
+        .deadline-icon.overdue {
+            background: #fee2e2;
+        }
+
+        .deadline-icon.today {
+            background: #fef3c7;
+        }
+
+        .deadline-icon.upcoming {
+            background: #dbeafe;
+        }
+
+    .analytics-deadline > div:nth-child(2) {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        flex: 1;
+    }
+
+    .analytics-deadline strong {
+        font-size: 13px;
+    }
+
+    .analytics-deadline span {
+        color: #969bad;
+        font-size: 11px;
+    }
+
+    .analytics-deadline h4 {
+        font-weight: 800;
+        color: var(--theme-primary, #6658f5);
+        margin: 0;
+    }
+
+    .analytics-summary {
+        background: var(--theme-soft, #f0eaff);
+        color: var(--theme-primary, #6658f5);
+        padding: 18px;
+        border-radius: 12px;
+        margin-top: 25px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .analytics-empty {
+        text-align: center;
+        color: #969bad;
+        padding: 35px;
+    }
+
+    /* POMODORO */
+
+    .pomodoro-section {
+        margin-top: 40px;
+    }
+
+    .pomodoro-section-heading {
+        margin-bottom: 25px;
+    }
+
+        .pomodoro-section-heading h2 {
+            font-size: 25px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .pomodoro-section-heading p {
+            color: #969bad;
+            font-size: 14px;
+        }
+
+    /* WEEKLY CHART */
+
+    .weekly-activity-card {
+        margin-bottom: 25px;
+    }
+
+    .weekly-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+        .weekly-header p {
+            color: #969bad;
+            font-size: 13px;
+        }
+
+    .weekly-badge {
+        background: var(--theme-soft, #f0eaff);
+        color: var(--theme-primary, #6658f5);
+        padding: 12px 17px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .weekly-chart {
+        height: 280px;
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 15px;
+        margin-top: 30px;
+    }
+
+    .weekly-day {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 0;
+    }
+
+    .weekly-value {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--theme-primary, #6658f5);
+        margin-bottom: 12px;
+    }
+
+    .weekly-bar-area {
+        height: 200px;
+        width: 100%;
+        max-width: 65px;
+        background: #f8f7ff;
+        border-radius: 12px;
+        display: flex;
+        align-items: flex-end;
+        overflow: hidden;
+    }
+
+    .weekly-bar {
+        width: 100%;
+        background: linear-gradient( 180deg, var(--theme-secondary, #a477ff), var(--theme-primary, #6658f5) );
+        border-radius: 12px 12px 0 0;
+        transition: height 0.3s;
+    }
+
+        .weekly-bar.today-bar {
+            background: linear-gradient( 180deg, var(--theme-third, #f5a5d8), var(--theme-primary, #9360f7) );
+        }
+
+    .weekly-day-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #8990a5;
+        margin-top: 13px;
+    }
+
+    .weekly-chart-footer {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        border-top: 1px solid #f0eff8;
+        padding-top: 18px;
+        color: #8990a5;
+        font-size: 12px;
+    }
+
+    .empty-emoji {
+        font-size: 45px;
+        margin-bottom: 15px;
+    }
+
+    .analytics-empty h4 {
+        color: #1e2440;
+        margin-bottom: 10px;
+    }
+
+    .focus-link {
+        display: inline-block;
+        background: var(--theme-primary, #6658f5);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        text-decoration: none;
+        margin-top: 15px;
+        font-weight: 700;
+    }
+
+    /* PRODUCTIVITY INSIGHT */
+
+    .productivity-insight {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        background: linear-gradient( 120deg, var(--theme-soft, #f0eaff), #ffffff );
+        border-radius: 20px;
+        padding: 25px;
+    }
+
+    .productivity-insight-icon {
+        font-size: 35px;
+    }
+
+    .productivity-insight h4 {
+        color: var(--theme-primary, #6658f5);
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .productivity-insight p {
+        color: #555d75;
+        font-size: 13px;
+        margin: 0;
+    }
+
+    /* RESPONSIVE */
+
+    @@media (max-width: 1100px) {
+        .analytics-stats,
+        .pomodoro-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 900px) {
+        .analytics-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .analytics-stats,
+        .pomodoro-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .analytics-card {
+            padding: 20px;
+        }
+
+        .weekly-chart {
+            gap: 5px;
+        }
+
+        .weekly-value,
+        .weekly-day-label {
+            font-size: 10px;
+        }
+
+        .productivity-insight {
+            align-items: flex-start;
+        }
+    }
+
+</style>
+
+@code {
+
+    private List<TaskItem> tasks = new();
+
+    private List<PomodoroSession> sessions = new();
+
+    private int TotalTasks => tasks.Count;
+
+    private int CompletedTasks =>
+        tasks.Count(t => t.Status == StudyTaskStatus.Completed);
+
+    private int InProgressTasks =>
+        tasks.Count(t => t.Status == StudyTaskStatus.InProgress);
+
+    private int PendingTasks =>
+        tasks.Count(t => t.Status == StudyTaskStatus.Pending);
+
+    private int HighPriorityTasks =>
+        tasks.Count(t => t.Priority == StudyTaskPriority.High);
+
+    private int MediumPriorityTasks =>
+        tasks.Count(t => t.Priority == StudyTaskPriority.Medium);
+
+    private int LowPriorityTasks =>
+        tasks.Count(t => t.Priority == StudyTaskPriority.Low);
+
+    private int CompletedPercentage =>
+        TotalTasks == 0
+            ? 0
+            : (int)Math.Round(CompletedTasks * 100.0 / TotalTasks);
+
+    private int InProgressPercentage =>
+        TotalTasks == 0
+            ? 0
+            : (int)Math.Round(InProgressTasks * 100.0 / TotalTasks);
+
+    private string DonutStyle =>
+        TotalTasks == 0
+            ? "background: #f0eff8;"
+            : $"background: conic-gradient(" +
+              $"#22c55e 0% {CompletedPercentage}%," +
+              $"#3b82f6 {CompletedPercentage}% " +
+              $"{CompletedPercentage + InProgressPercentage}%," +
+              $"#f59e0b {CompletedPercentage + InProgressPercentage}% 100%);";
+
+    private int OverdueTasks =>
+        tasks.Count(t =>
+            t.DueDate.Date < DateTime.Today &&
+            t.Status != StudyTaskStatus.Completed);
+
+    private int DueTodayTasks =>
+        tasks.Count(t =>
+            t.DueDate.Date == DateTime.Today &&
+            t.Status != StudyTaskStatus.Completed);
+
+    private int UpcomingTasks =>
+        tasks.Count(t =>
+            t.DueDate.Date > DateTime.Today &&
+            t.DueDate.Date <= DateTime.Today.AddDays(7) &&
+            t.Status != StudyTaskStatus.Completed);
+
+    private string SummaryMessage =>
+        OverdueTasks > 0
+            ? $"⚠️ You have {OverdueTasks} overdue tasks. Review your deadlines!"
+            : DueTodayTasks > 0
+                ? $"📌 You have {DueTodayTasks} tasks due today. Stay focused!"
+                : "🎉 Great job! You have no overdue deadlines.";
+
+    private List<SubjectStatistic> SubjectStats =>
+        tasks
+            .Where(t => !string.IsNullOrWhiteSpace(t.Subject))
+            .GroupBy(t => t.Subject.Trim(), StringComparer.OrdinalIgnoreCase)
+            .Select(g => new SubjectStatistic
+            {
+                Name = g.Key,
+                Total = g.Count(),
+                Completed = g.Count(t =>
+                    t.Status == StudyTaskStatus.Completed)
+            })
+            .OrderBy(s => s.Name)
+            .ToList();
+
+    // POMODORO STATISTICS
+
+    private int TotalPomodoros =>
+        sessions.Count;
+
+    private int TotalFocusMinutes =>
+        sessions.Sum(s => s.DurationMinutes);
+
+    private string FormattedFocusTime =>
+        $"{TotalFocusMinutes / 60}h {TotalFocusMinutes % 60}m total";
+
+    private int WeeklyFocusMinutes =>
+        sessions
+            .Where(s =>
+                s.CompletedAt.Date >= DateTime.Today.AddDays(-6) &&
+                s.CompletedAt.Date <= DateTime.Today)
+            .Sum(s => s.DurationMinutes);
+
+    private List<WeeklyDay> WeeklyActivity =>
+        Enumerable.Range(0, 7)
+            .Select(i =>
+            {
+                var date = DateTime.Today.AddDays(i - 6);
+
+                return new WeeklyDay
+                {
+                    Date = date,
+                    Label = date.ToString(
+                        "ddd",
+                        CultureInfo.GetCultureInfo("en-US")),
+
+                    Minutes = sessions
+                        .Where(s => s.CompletedAt.Date == date)
+                        .Sum(s => s.DurationMinutes),
+
+                    IsToday = date == DateTime.Today
+                };
+            })
+            .ToList();
+
+    private int StudyStreak
+    {
+        get
+        {
+            var studyDates = sessions
+                .Select(s => s.CompletedAt.Date)
+                .Distinct()
+                .ToHashSet();
+
+            var currentDate = DateTime.Today;
+
+            if (!studyDates.Contains(currentDate))
+                currentDate = currentDate.AddDays(-1);
+
+            int streak = 0;
+
+            while (studyDates.Contains(currentDate))
+            {
+                streak++;
+                currentDate = currentDate.AddDays(-1);
+            }
+
+            return streak;
+        }
+    }
+
+    private string ProductivityMessage =>
+        TotalPomodoros == 0
+            ? "Start your first focus session to begin tracking your productivity!"
+            : StudyStreak >= 7
+                ? "🔥 Amazing consistency! You've studied for at least 7 consecutive days."
+                : StudyStreak >= 3
+                    ? "🚀 Great progress! Keep your study streak going."
+                    : WeeklyFocusMinutes >= 120
+                        ? "💜 Great work! You've already studied for more than 2 hours this week."
+                        : "🌱 Every focus session counts. Keep building your study habits!";
+
+    protected override void OnInitialized()
+    {
+        LoadData();
+    }
+
+    private void LoadData()
+    {
+        tasks = TaskService.GetAll();
+        sessions = PomodoroService.GetAll();
+    }
+
+    private int GetBarWidth(int count)
+    {
+        if (TotalTasks == 0)
+            return 0;
+
+        return (int)Math.Round(count * 100.0 / TotalTasks);
+    }
+
+    private int GetWeeklyBarHeight(int minutes)
+    {
+        if (minutes == 0)
+            return 0;
+
+        int maxMinutes = WeeklyActivity.Max(d => d.Minutes);
+
+        if (maxMinutes == 0)
+            return 0;
+
+        return Math.Max(
+            5,
+            (int)Math.Round(minutes * 100.0 / maxMinutes));
+    }
+
+    private class SubjectStatistic
+    {
+        public string Name { get; set; } = "";
+
+        public int Total { get; set; }
+
+        public int Completed { get; set; }
+
+        public int Progress =>
+            Total == 0
+                ? 0
+                : (int)Math.Round(Completed * 100.0 / Total);
+    }
+
+    private class WeeklyDay
+    {
+        public DateTime Date { get; set; }
+
+        public string Label { get; set; } = "";
+
+        public int Minutes { get; set; }
+
+        public bool IsToday { get; set; }
+    }
+}

@@ -1,7 +1,627 @@
 ﻿@page "/"
+@rendermode InteractiveServer
+@implements IDisposable
 
-<PageTitle>Home</PageTitle>
+@using StudyMate.Models
+@using StudyMate.Services
+@using System.Globalization
 
-<h1>Hello, world!</h1>
+@inject TaskService TaskService
+@inject AppState AppState
 
-Welcome to your new app.
+<PageTitle>Dashboard - StudyMate</PageTitle>
+
+<div class="study-dashboard">
+
+    <!-- WELCOME BANNER -->
+    <div class="welcome-banner">
+        <div>
+            <div class="welcome-label">✦ YOUR PERSONAL STUDY SPACE</div>
+            <h1>Welcome to StudyMate! 👋</h1>
+            <p>Stay organized, achieve your goals, and make every study day count.</p>
+
+            <a href="/tasks" class="welcome-button">
+                + Add New Task →
+            </a>
+        </div>
+
+        <div class="welcome-decoration">✦</div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="section-heading">
+        <div>
+            <h3>Overview</h3>
+            <p>Here's what's happening with your studies today.</p>
+        </div>
+
+        <div class="dashboard-heading-actions">
+            <span class="today-badge">
+                📅 @DateTime.Today.ToString("MMMM dd, yyyy", EnglishCulture)
+            </span>
+
+            <button class="dashboard-refresh" @onclick="LoadData">
+                ↻ Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- STATISTICS -->
+    <div class="stats-grid">
+
+        <div class="stat-card">
+            <div class="stat-icon purple-icon">📚</div>
+            <div class="stat-label">Total Tasks</div>
+            <div class="stat-number">@TotalTasks</div>
+            <div class="stat-footer">All your assignments</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon green-icon">✓</div>
+            <div class="stat-label">Completed</div>
+            <div class="stat-number">@CompletedTasks</div>
+            <div class="stat-footer">Great work! Keep going</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon blue-icon">⚡</div>
+            <div class="stat-label">In Progress</div>
+            <div class="stat-number">@InProgressTasks</div>
+            <div class="stat-footer">Currently working on</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon orange-icon">⏳</div>
+            <div class="stat-label">Pending</div>
+            <div class="stat-number">@PendingTasks</div>
+            <div class="stat-footer">Waiting to be started</div>
+        </div>
+
+    </div>
+
+    <!-- DEADLINE REMINDERS -->
+    @if (AppState.Settings.ShowReminders)
+    {
+        <div class="reminders-panel">
+
+            <div class="reminders-header">
+                <div>
+                    <h3>🔔 Deadline Reminders</h3>
+                    <p>Stay informed about your important assignments.</p>
+                </div>
+
+                <span class="notification-counter">
+                    🔔 @NotificationCount Alerts
+                </span>
+            </div>
+
+            <div class="reminders-grid">
+
+                <div class="reminder-card overdue-reminder">
+                    <div class="reminder-icon">🚨</div>
+
+                    <div>
+                        <span>Overdue</span>
+                        <h2>@OverdueCount</h2>
+                        <small>Past deadlines</small>
+                    </div>
+                </div>
+
+                <div class="reminder-card today-reminder">
+                    <div class="reminder-icon">📌</div>
+
+                    <div>
+                        <span>Due Today</span>
+                        <h2>@DueTodayCount</h2>
+                        <small>Complete today</small>
+                    </div>
+                </div>
+
+                <div class="reminder-card tomorrow-reminder">
+                    <div class="reminder-icon">⏰</div>
+
+                    <div>
+                        <span>Due Tomorrow</span>
+                        <h2>@DueTomorrowCount</h2>
+                        <small>Prepare ahead</small>
+                    </div>
+                </div>
+
+            </div>
+
+            @if (NotificationCount == 0)
+            {
+                <div class="reminder-success">
+                    🎉 You're all caught up! No urgent deadlines right now.
+                </div>
+            }
+            else
+            {
+                <div class="reminder-alert-list">
+
+                    @foreach (var task in UrgentTasks)
+                    {
+                        <div class="reminder-alert-item">
+
+                            <div class="reminder-alert-info">
+                                <span class="reminder-alert-dot @GetDeadlineClass(task)"></span>
+
+                                <div>
+                                    <strong>@task.Title</strong>
+
+                                    <small>
+                                        @(string.IsNullOrWhiteSpace(task.Subject)
+                                                                    ? "General"
+                                                                    : task.Subject)
+                        </small>
+                    </div>
+                </div>
+
+                            <span class="reminder-alert-badge @GetDeadlineClass(task)">
+                                @GetDeadlineLabel(task)
+                            </span>
+
+                        </div>
+                        }
+
+                </div>
+            }
+
+        </div>
+    }
+
+    <!-- PROGRESS AND MOTIVATION -->
+    <div class="dashboard-grid">
+
+        <div class="dashboard-panel">
+
+            <div class="panel-header">
+                <div>
+                    <h4>📈 Study Progress</h4>
+                    <p>Keep track of your achievements</p>
+                </div>
+
+                <span class="progress-percentage">
+                    @ProgressPercentage%
+                </span>
+            </div>
+
+            <div class="custom-progress">
+                <div class="custom-progress-fill"
+                     style="width: @(ProgressPercentage)%">
+                </div>
+            </div>
+
+            <div class="progress-details">
+                <span>@CompletedTasks completed</span>
+                <span>@TotalTasks total tasks</span>
+            </div>
+
+            <div class="progress-message">
+
+                @if (TotalTasks == 0)
+                {
+                    <span>🌱 Your journey starts with your first task!</span>
+                }
+                else if (ProgressPercentage == 100)
+                {
+                    <span>🎉 Amazing! You've completed all your tasks!</span>
+                }
+                else if (ProgressPercentage >= 50)
+                {
+                    <span>🚀 You're doing great! Keep up the momentum!</span>
+                }
+                else
+                {
+                    <span>💜 Every small step brings you closer to success!</span>
+                }
+
+            </div>
+
+        </div>
+
+        <div class="motivation-card">
+            <div class="motivation-icon">🎯</div>
+
+            <h4>Stay Focused!</h4>
+
+            <p>
+                Success is the sum of small efforts,
+                repeated day in and day out.
+            </p>
+
+            <div class="motivation-bottom">
+                ✨ You've got this!
+            </div>
+        </div>
+
+    </div>
+
+    <!-- UPCOMING DEADLINES -->
+    <div class="dashboard-panel deadlines-panel">
+
+        <div class="panel-header">
+            <div>
+                <h4>📅 Upcoming Deadlines</h4>
+                <p>Never miss an important assignment</p>
+            </div>
+
+            <a href="/tasks" class="view-all-link">
+                View All →
+            </a>
+        </div>
+
+        @if (UpcomingTasks.Count == 0)
+        {
+            <div class="empty-deadlines">
+                <div class="empty-icon">🎉</div>
+                <h5>All caught up!</h5>
+                <p>No upcoming deadlines. Enjoy your free time!</p>
+            </div>
+        }
+        else
+        {
+            <div class="deadline-list">
+
+                @foreach (var task in UpcomingTasks)
+                {
+                    <div class="deadline-item">
+
+                        <div class="deadline-icon">📝</div>
+
+                        <div class="deadline-info">
+                            <h5>@task.Title</h5>
+                            <span>@task.Subject</span>
+                        </div>
+
+                        <div class="deadline-date">
+                            📅 @task.DueDate.ToString("dd MMM yyyy", EnglishCulture)
+                        </div>
+
+                        <span class="priority-badge @task.Priority.ToString().ToLowerInvariant()">
+                            @task.Priority
+                        </span>
+
+                    </div>
+                }
+
+            </div>
+        }
+
+    </div>
+
+</div>
+
+<style>
+
+    .dashboard-heading-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .dashboard-refresh {
+        background: var(--theme-soft, #f0eaff);
+        color: var(--theme-primary, #6658f5);
+        border: none;
+        padding: 11px 18px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+        .dashboard-refresh:hover {
+            opacity: 0.85;
+        }
+
+    .reminders-panel {
+        background: white;
+        padding: 28px;
+        border-radius: 22px;
+        margin-bottom: 25px;
+        box-shadow: 0 5px 25px rgba(30, 36, 64, 0.05);
+    }
+
+    .reminders-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 25px;
+    }
+
+        .reminders-header h3 {
+            font-size: 21px;
+            font-weight: 800;
+            color: #1e2440;
+            margin-bottom: 7px;
+        }
+
+        .reminders-header p {
+            color: #969bad;
+            font-size: 13px;
+            margin: 0;
+        }
+
+    .notification-counter {
+        background: var(--theme-soft, #f0eaff);
+        color: var(--theme-primary, #6658f5);
+        padding: 11px 16px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .reminders-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+        margin-bottom: 20px;
+    }
+
+    .reminder-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-radius: 16px;
+        padding: 20px;
+    }
+
+    .reminder-icon {
+        font-size: 30px;
+        width: 55px;
+        height: 55px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 14px;
+        flex-shrink: 0;
+    }
+
+    .reminder-card span {
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .reminder-card h2 {
+        font-size: 30px;
+        font-weight: 800;
+        margin: 5px 0;
+    }
+
+    .reminder-card small {
+        font-size: 11px;
+        opacity: 0.75;
+    }
+
+    .overdue-reminder {
+        background: #fff0f0;
+        color: #dc2626;
+    }
+
+    .today-reminder {
+        background: #fff5e5;
+        color: #d97706;
+    }
+
+    .tomorrow-reminder {
+        background: #fffbe6;
+        color: #a16207;
+    }
+
+    .reminder-success {
+        background: #ecfdf5;
+        color: #15803d;
+        padding: 16px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .reminder-alert-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .reminder-alert-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        background: #fafaff;
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    .reminder-alert-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+
+        .reminder-alert-info > div {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 0;
+        }
+
+        .reminder-alert-info strong {
+            font-size: 13px;
+            color: #1e2440;
+            overflow-wrap: anywhere;
+        }
+
+        .reminder-alert-info small {
+            color: #969bad;
+            font-size: 11px;
+        }
+
+    .reminder-alert-dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .reminder-alert-badge {
+        padding: 8px 12px;
+        border-radius: 9px;
+        font-size: 11px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .reminder-alert-dot.overdue {
+        background: #ef4444;
+    }
+
+    .reminder-alert-dot.today {
+        background: #f59e0b;
+    }
+
+    .reminder-alert-dot.tomorrow {
+        background: #eab308;
+    }
+
+    .reminder-alert-badge.overdue {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .reminder-alert-badge.today {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    .reminder-alert-badge.tomorrow {
+        background: #fef9c3;
+        color: #a16207;
+    }
+
+    @@media (max-width: 900px) {
+        .reminders-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .reminders-panel {
+            padding: 18px;
+        }
+
+        .reminder-alert-item {
+            flex-wrap: wrap;
+        }
+    }
+
+</style>
+
+@code {
+
+    private readonly CultureInfo EnglishCulture =
+        CultureInfo.GetCultureInfo("en-US");
+
+    private List<TaskItem> Tasks = new();
+
+    private int TotalTasks =>
+        Tasks.Count;
+
+    private int CompletedTasks =>
+        Tasks.Count(t => t.Status == StudyTaskStatus.Completed);
+
+    private int InProgressTasks =>
+        Tasks.Count(t => t.Status == StudyTaskStatus.InProgress);
+
+    private int PendingTasks =>
+        Tasks.Count(t => t.Status == StudyTaskStatus.Pending);
+
+    private int ProgressPercentage =>
+        TotalTasks == 0
+            ? 0
+            : (int)Math.Round(CompletedTasks * 100.0 / TotalTasks);
+
+    private int OverdueCount =>
+        Tasks.Count(t =>
+            t.Status != StudyTaskStatus.Completed &&
+            t.DueDate.Date < DateTime.Today);
+
+    private int DueTodayCount =>
+        Tasks.Count(t =>
+            t.Status != StudyTaskStatus.Completed &&
+            t.DueDate.Date == DateTime.Today);
+
+    private int DueTomorrowCount =>
+        Tasks.Count(t =>
+            t.Status != StudyTaskStatus.Completed &&
+            t.DueDate.Date == DateTime.Today.AddDays(1));
+
+    private int NotificationCount =>
+        OverdueCount + DueTodayCount + DueTomorrowCount;
+
+    private List<TaskItem> UrgentTasks =>
+        Tasks
+            .Where(t =>
+                t.Status != StudyTaskStatus.Completed &&
+                t.DueDate.Date <= DateTime.Today.AddDays(1))
+            .OrderBy(t => t.DueDate)
+            .ToList();
+
+    private List<TaskItem> UpcomingTasks =>
+        Tasks
+            .Where(t =>
+                t.Status != StudyTaskStatus.Completed &&
+                t.DueDate.Date >= DateTime.Today)
+            .OrderBy(t => t.DueDate)
+            .Take(5)
+            .ToList();
+
+    private string GetDeadlineClass(TaskItem task)
+    {
+        if (task.DueDate.Date < DateTime.Today)
+            return "overdue";
+
+        if (task.DueDate.Date == DateTime.Today)
+            return "today";
+
+        return "tomorrow";
+    }
+
+    private string GetDeadlineLabel(TaskItem task)
+    {
+        if (task.DueDate.Date < DateTime.Today)
+            return "Overdue";
+
+        if (task.DueDate.Date == DateTime.Today)
+            return "Due Today";
+
+        return "Due Tomorrow";
+    }
+
+    protected override void OnInitialized()
+    {
+        AppState.OnChange += HandleStateChanged;
+        LoadData();
+    }
+
+    private void LoadData()
+    {
+        Tasks = TaskService.GetAll();
+    }
+
+    private void HandleStateChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= HandleStateChanged;
+    }
+}

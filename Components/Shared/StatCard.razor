@@ -1,0 +1,52 @@
+﻿<div class="shared-stat-card">
+    <div class="shared-stat-icon">@Icon</div>
+    <h3>@Value</h3>
+    <p>@Title</p>
+
+    @if (!string.IsNullOrWhiteSpace(Description))
+    {
+        <small>@Description</small>
+    }
+</div>
+
+<style>
+    .shared-stat-card {
+        background: white;
+        border-radius: 18px;
+        padding: 25px;
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(30, 36, 64, 0.05);
+        height: 100%;
+        min-width: 0;
+    }
+
+    .shared-stat-icon {
+        font-size: 30px;
+        margin-bottom: 10px;
+    }
+
+    .shared-stat-card h3 {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--theme-primary, #6658f5);
+        margin: 10px 0;
+    }
+
+    .shared-stat-card p {
+        color: #737c92;
+        font-size: 13px;
+        margin-bottom: 5px;
+    }
+
+    .shared-stat-card small {
+        color: #8990a5;
+        font-size: 11px;
+    }
+</style>
+
+@code {
+    [Parameter] public string Icon { get; set; } = "📊";
+    [Parameter] public string Value { get; set; } = "0";
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Description { get; set; } = "";
+}

@@ -1,19 +1,46 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
 
-<div class="page">
+@using StudyMate.Models
+@using StudyMate.Services
+
+@inject AppState AppState
+
+<div class="page studymate-layout @ThemeClass">
+
     <div class="sidebar">
         <NavMenu />
     </div>
 
     <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+
+        <div class="top-row px-4 studymate-topbar">
+
+            <div class="topbar-welcome">
+                <span class="topbar-icon">✨</span>
+                <span>Study smarter, achieve more!</span>
+            </div>
+
+            <div class="topbar-actions">
+
+                <span class="topbar-student">
+                    👤 @StudentName
+                </span>
+
+                <a class="topbar-settings" href="/settings">
+                    ⚙️ Settings
+                </a>
+
+            </div>
+
         </div>
 
         <article class="content px-4">
             @Body
         </article>
+
     </main>
+
 </div>
 
 <div id="blazor-error-ui">
@@ -21,3 +48,110 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+<style>
+    .studymate-layout {
+        --theme-primary: #6658f5;
+        --theme-secondary: #9360f7;
+        --theme-soft: #f0eaff;
+    }
+
+        .studymate-layout.theme-pink {
+            --theme-primary: #ec4899;
+            --theme-secondary: #f472b6;
+            --theme-soft: #fce7f3;
+        }
+
+        .studymate-layout.theme-blue {
+            --theme-primary: #3b82f6;
+            --theme-secondary: #60a5fa;
+            --theme-soft: #dbeafe;
+        }
+
+    .studymate-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        flex-wrap: wrap;
+        background: white;
+        border-bottom: 1px solid #f0eff8;
+    }
+
+    .topbar-welcome {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #8990a5;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .topbar-icon {
+        font-size: 20px;
+    }
+
+    .topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .topbar-student {
+        color: #555d75;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .topbar-settings {
+        background: var(--theme-soft);
+        color: var(--theme-primary);
+        padding: 10px 17px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    @@media (max-width: 700px) {
+        .topbar-welcome {
+            display: none;
+        }
+
+        .topbar-actions {
+            width: 100%;
+            justify-content: flex-end;
+        }
+    }
+</style>
+
+@code {
+    private string StudentName =>
+        string.IsNullOrWhiteSpace(AppState.Settings.StudentName)
+            ? "Student"
+            : AppState.Settings.StudentName;
+
+    private string ThemeClass =>
+        AppState.Settings.Theme?.ToLowerInvariant() switch
+        {
+            "pink" => "theme-pink",
+            "blue" => "theme-blue",
+            _ => "theme-purple"
+        };
+
+    protected override void OnInitialized()
+    {
+        AppState.OnChange += HandleStateChanged;
+        AppState.LoadSettings();
+    }
+
+    private void HandleStateChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= HandleStateChanged;
+    }
+}
