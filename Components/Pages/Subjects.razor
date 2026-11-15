@@ -1,4 +1,4 @@
-﻿@page "/subjects"
+@page "/subjects"
 @rendermode InteractiveServer
 
 @using StudyMate.Models
@@ -17,6 +17,7 @@
             <p>Organize your courses and track your academic progress.</p>
         </div>
 
+        <button class="subjects-add-button" type="button" @onclick="LoadSubjects">↻ Refresh</button>
         <a href="/tasks" class="subjects-add-button">
             + Add Task
         </a>
@@ -664,6 +665,11 @@
 
     protected override void OnInitialized()
     {
+        LoadSubjects();
+    }
+
+    private void LoadSubjects()
+    {
         tasks = TaskService.GetAll();
 
         subjects = tasks
@@ -676,7 +682,7 @@
 
     private void ToggleSubject(string subject)
     {
-        if (expandedSubject == subject)
+        if (string.Equals(expandedSubject, subject, StringComparison.OrdinalIgnoreCase))
         {
             expandedSubject = null;
         }
