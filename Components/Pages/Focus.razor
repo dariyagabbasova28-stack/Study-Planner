@@ -162,11 +162,18 @@
 <style>
 
     .focus-page {
-        padding: 15px 10px 40px;
+        width: 100%;
         max-width: 1400px;
+        min-width: 0;
+        padding: 15px 10px 40px;
         margin: auto;
         color: #1e2440;
+        box-sizing: border-box;
     }
+
+        .focus-page * {
+            box-sizing: border-box;
+        }
 
     .focus-header {
         margin-bottom: 30px;
@@ -186,6 +193,7 @@
         display: grid;
         grid-template-columns: 2fr 1fr;
         gap: 25px;
+        min-width: 0;
     }
 
     .focus-timer-card {
@@ -194,7 +202,10 @@
         padding: 35px;
         box-shadow: 0 5px 25px rgba(30, 36, 64, 0.05);
         text-align: center;
+        min-width: 0;
     }
+
+    /* TIMER MODES */
 
     .focus-modes {
         display: flex;
@@ -219,9 +230,13 @@
                 color: white;
             }
 
+    /* TIMER CIRCLE */
+
     .timer-circle {
         width: 310px;
         height: 310px;
+        max-width: 100%;
+        aspect-ratio: 1;
         border-radius: 50%;
         padding: 12px;
         margin: 0 auto 35px;
@@ -258,6 +273,8 @@
         font-size: 15px;
         font-weight: 600;
     }
+
+    /* TIMER CONTROLS */
 
     .timer-controls {
         display: flex;
@@ -325,10 +342,14 @@
             text-decoration: none;
         }
 
+    /* SIDEBAR */
+
     .focus-sidebar {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: 1fr;
         gap: 20px;
+        min-width: 0;
+        align-content: start;
     }
 
     .focus-stat-card,
@@ -337,6 +358,7 @@
         border-radius: 22px;
         padding: 28px;
         box-shadow: 0 5px 25px rgba(30, 36, 64, 0.05);
+        min-width: 0;
     }
 
     .focus-stat-card {
@@ -352,12 +374,15 @@
         font-size: 35px;
         font-weight: 800;
         color: var(--theme-primary, #6658f5);
+        overflow-wrap: anywhere;
     }
 
     .focus-stat-card p {
         color: #969bad;
         font-size: 13px;
     }
+
+    /* STUDY TIPS */
 
     .focus-tips-card h4 {
         font-weight: 800;
@@ -373,25 +398,239 @@
         color: #555d75;
     }
 
+    /* TABLET */
+
     @@media (max-width: 900px) {
+
         .focus-layout {
-            grid-template-columns: 1fr;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 18px;
+        }
+
+        .focus-sidebar {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 15px;
+        }
+
+        .focus-tips-card {
+            grid-column: 1 / -1;
         }
     }
 
-    @@media (max-width: 500px) {
+    /* MOBILE */
+
+    @@media (max-width: 600px) {
+
+        .focus-page {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            padding: 12px 0 25px;
+        }
+
+        .focus-header {
+            margin-bottom: 18px;
+        }
+
+            .focus-header h2 {
+                font-size: 24px;
+                line-height: 1.3;
+                margin-bottom: 6px;
+            }
+
+            .focus-header p {
+                font-size: 13px;
+                line-height: 1.5;
+                margin-bottom: 0;
+            }
+
+        .focus-layout {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 12px;
+        }
+        /* COMPACT TIMER CARD */
+
+        .focus-timer-card {
+            width: 100%;
+            min-width: 0;
+            padding: 18px 12px;
+            border-radius: 16px;
+        }
+        /* MODES */
+
+        .focus-modes {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            margin-bottom: 22px;
+        }
+
+            .focus-modes button {
+                min-width: 0;
+                padding: 10px 4px;
+                border-radius: 9px;
+                font-size: 11px;
+                line-height: 1.3;
+                white-space: normal;
+            }
+        /* SMALLER TIMER CIRCLE */
+
         .timer-circle {
-            width: 250px;
-            height: 250px;
+            width: min(220px, 100%);
+            height: auto;
+            aspect-ratio: 1;
+            padding: 9px;
+            margin: 0 auto 22px;
+        }
+
+        .timer-icon {
+            font-size: 28px;
+            margin-bottom: 5px;
         }
 
         .timer-display {
-            font-size: 48px;
+            font-size: clamp(35px, 11vw, 48px);
+            letter-spacing: 1px;
+            line-height: 1.2;
         }
 
-        .focus-timer-card {
-            padding: 20px;
+        .timer-label {
+            font-size: 12px;
+            margin-top: 5px;
         }
+        /* BUTTONS */
+
+        .timer-controls {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .timer-primary,
+        .timer-secondary {
+            width: 100%;
+            min-width: 0;
+            padding: 12px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .timer-message {
+            font-size: 12px;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .save-message {
+            padding: 10px;
+            font-size: 11px;
+        }
+
+        .focus-settings-info {
+            margin-top: 15px;
+            padding: 11px;
+            font-size: 10px;
+            line-height: 1.7;
+            border-radius: 10px;
+        }
+
+            .focus-settings-info a {
+                margin-left: 4px;
+            }
+        /* TWO STATISTICS PER ROW */
+
+        .focus-sidebar {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .focus-stat-card {
+            min-width: 0;
+            min-height: 0;
+            padding: 15px 8px;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .focus-stat-icon {
+            font-size: 25px;
+            margin-bottom: 6px;
+        }
+
+        .focus-stat-card h3 {
+            font-size: clamp(18px, 6vw, 25px);
+            line-height: 1.3;
+            margin: 0 0 5px;
+        }
+
+        .focus-stat-card p {
+            font-size: 10px;
+            line-height: 1.4;
+            margin: 0;
+        }
+        /* COMPACT STUDY TIPS */
+
+        .focus-tips-card {
+            grid-column: 1 / -1;
+            width: 100%;
+            min-width: 0;
+            padding: 15px;
+            border-radius: 14px;
+        }
+
+            .focus-tips-card h4 {
+                font-size: 15px;
+                margin-bottom: 12px;
+            }
+
+        .focus-tip {
+            padding: 10px;
+            margin-bottom: 7px;
+            font-size: 11px;
+            line-height: 1.5;
+            border-radius: 9px;
+        }
+
+            .focus-tip:last-child {
+                margin-bottom: 0;
+            }
+    }
+
+    /* EXTRA SMALL PHONES */
+
+    @@media (max-width: 350px) {
+
+        .focus-timer-card {
+            padding: 14px 9px;
+        }
+
+        .timer-circle {
+            width: min(195px, 100%);
+        }
+
+        .focus-modes button {
+            font-size: 10px;
+            padding: 9px 3px;
+        }
+
+        .focus-stat-card {
+            padding: 12px 6px;
+        }
+
+            .focus-stat-card h3 {
+                font-size: 19px;
+            }
+
+            .focus-stat-card p {
+                font-size: 9px;
+            }
     }
 
 </style>

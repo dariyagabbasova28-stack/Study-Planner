@@ -14,15 +14,12 @@
 
     @if (!string.IsNullOrWhiteSpace(operationError))
     {
-        <div class="tasks-error-banner" role="alert">
-            <span>⚠️ @operationError</span>
-            <button type="button"
-                    class="tasks-error-close"
-                    @onclick="() => operationError = string.Empty">
-                ✕
-            </button>
+        <div class="tasks-error" role="alert">
+            ⚠️ @operationError
         </div>
     }
+
+    <!-- PAGE HEADER -->
 
     <div class="tasks-header">
         <div>
@@ -30,10 +27,13 @@
             <p>Manage your assignments and stay on top of deadlines.</p>
         </div>
 
-        <button class="tasks-primary-button" @onclick="ShowAddForm">
+        <button class="tasks-primary-button"
+                @onclick="ShowAddForm">
             + Add New Task
         </button>
     </div>
+
+    <!-- STATISTICS -->
 
     <div class="tasks-stats">
 
@@ -49,7 +49,9 @@
             <span class="tasks-stat-icon">⏳</span>
             <div>
                 <small>Pending</small>
-                <h3>@tasks.Count(t => t.Status == StudyTaskStatus.Pending)</h3>
+                <h3>
+                    @tasks.Count(t => t.Status == StudyTaskStatus.Pending)
+                </h3>
             </div>
         </div>
 
@@ -57,7 +59,9 @@
             <span class="tasks-stat-icon">🚀</span>
             <div>
                 <small>In Progress</small>
-                <h3>@tasks.Count(t => t.Status == StudyTaskStatus.InProgress)</h3>
+                <h3>
+                    @tasks.Count(t => t.Status == StudyTaskStatus.InProgress)
+                </h3>
             </div>
         </div>
 
@@ -65,18 +69,23 @@
             <span class="tasks-stat-icon">✅</span>
             <div>
                 <small>Completed</small>
-                <h3>@tasks.Count(t => t.Status == StudyTaskStatus.Completed)</h3>
+                <h3>
+                    @tasks.Count(t => t.Status == StudyTaskStatus.Completed)
+                </h3>
             </div>
         </div>
 
     </div>
 
+    <!-- ADD / EDIT FORM -->
     @if (showForm)
     {
         <div class="tasks-form-card">
 
             <div class="tasks-section-header">
-                <h3>@(isEditing ? "✏️ Edit Task" : "✨ Add New Task")</h3>
+                <h3>
+                    @(isEditing ? "✏️ Edit Task" : "✨ Add New Task")
+                </h3>
 
                 <button type="button"
                         class="tasks-close-button"
@@ -85,24 +94,25 @@
                 </button>
             </div>
 
-            @if (!string.IsNullOrWhiteSpace(validationError))
-            {
-                <div class="tasks-validation-error" role="alert">
-                    ⚠️ @validationError
-                </div>
-            }
-
             <EditForm Model="taskForm"
-                      OnValidSubmit="SaveTask"
+                      OnSubmit="SaveTask"
                       FormName="taskForm">
 
                 <DataAnnotationsValidator />
                 <ValidationSummary />
 
+                @if (!string.IsNullOrWhiteSpace(validationError))
+                {
+                    <div class="tasks-error" role="alert">
+                        ⚠️ @validationError
+                    </div>
+                }
+
                 <div class="tasks-form-grid">
 
                     <div class="tasks-field">
                         <label>Task Title</label>
+
                         <InputText class="form-control"
                                    @bind-Value="taskForm.Title"
                                    placeholder="Enter task title" />
@@ -110,6 +120,7 @@
 
                     <div class="tasks-field">
                         <label>Subject</label>
+
                         <InputText class="form-control"
                                    @bind-Value="taskForm.Subject"
                                    placeholder="e.g. Mathematics" />
@@ -117,6 +128,7 @@
 
                     <div class="tasks-field full-width">
                         <label>Description</label>
+
                         <InputTextArea class="form-control"
                                        @bind-Value="taskForm.Description"
                                        placeholder="Describe your assignment..."
@@ -125,18 +137,22 @@
 
                     <div class="tasks-field">
                         <label>Due Date</label>
+
                         <InputDate class="form-control"
                                    @bind-Value="taskForm.DueDate" />
                     </div>
 
                     <div class="tasks-field">
                         <label>Priority</label>
+
                         <InputSelect class="form-select"
                                      @bind-Value="taskForm.Priority">
 
                             @foreach (var priority in Enum.GetValues<StudyTaskPriority>())
                             {
-                                <option value="@priority">@priority</option>
+                                <option value="@priority">
+                                    @priority
+                                </option>
                             }
 
                         </InputSelect>
@@ -144,35 +160,32 @@
 
                     <div class="tasks-field">
                         <label>Status</label>
+
                         <InputSelect class="form-select"
                                      @bind-Value="taskForm.Status">
 
                             @foreach (var status in Enum.GetValues<StudyTaskStatus>())
                             {
-                                <option value="@status">@status</option>
+                                <option value="@status">
+                                    @status
+                                </option>
                             }
 
-                    </InputSelect>
+                        </InputSelect>
+                    </div>
+
                 </div>
 
-            </div>
+                <div class="tasks-form-actions">
 
-            <div class="tasks-form-actions">
-
-                <button type="submit"
-                        class="tasks-primary-button"
-                        disabled="@isSaving">
-                    @(isSaving
-                                        ? "Saving..."
-                                        : isEditing
-                                        ? "Save Changes"
-                                        : "Create Task")
-                </button>
+                    <button type="submit"
+                            class="tasks-primary-button">
+                        @(isEditing ? "Save Changes" : "Create Task")
+                    </button>
 
                     <button type="button"
                             class="tasks-secondary-button"
-                            @onclick="CancelEdit"
-                            disabled="@isSaving">
+                            @onclick="CancelEdit">
                         Cancel
                     </button>
 
@@ -181,7 +194,9 @@
             </EditForm>
 
         </div>
-        }
+    }
+
+    <!-- TASK LIST -->
 
     <div class="tasks-list-card">
 
@@ -192,6 +207,8 @@
             </div>
         </div>
 
+        <!-- FILTERS -->
+
         <div class="tasks-filters">
 
             <input class="form-control"
@@ -199,25 +216,34 @@
                    @bind="searchText"
                    @bind:event="oninput" />
 
-            <select class="form-select" @bind="statusFilter">
+            <select class="form-select"
+                    @bind="statusFilter">
+
                 <option value="All">All Statuses</option>
                 <option value="Pending">Pending</option>
                 <option value="InProgress">In Progress</option>
                 <option value="Completed">Completed</option>
+
             </select>
 
-            <select class="form-select" @bind="priorityFilter">
+            <select class="form-select"
+                    @bind="priorityFilter">
+
                 <option value="All">All Priorities</option>
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
                 <option value="High">High</option>
+
             </select>
 
-            <select class="form-select" @bind="sortOrder">
+            <select class="form-select"
+                    @bind="sortOrder">
+
                 <option value="DueSoon">Due Date: Earliest</option>
                 <option value="DueLate">Due Date: Latest</option>
                 <option value="Priority">Priority: Highest</option>
                 <option value="Title">Title: A-Z</option>
+
             </select>
 
         </div>
@@ -257,51 +283,69 @@
 
                             <tr>
 
-                                <td>
+                                <td data-label="Assignment">
+
                                     <div class="tasks-title-cell">
+
                                         <strong>@task.Title</strong>
 
                                         @if (!string.IsNullOrWhiteSpace(task.Description))
                                         {
                                             <small>@task.Description</small>
                                         }
+
                                     </div>
+
                                 </td>
 
-                                <td>@task.Subject</td>
+                                <td data-label="Subject">
+                                    @task.Subject
+                                </td>
 
-                                <td>
+                                <td data-label="Due Date">
+
                                     <div class="tasks-date-cell">
-                                        @task.DueDate.ToString("dd MMM yyyy", englishCulture)
 
-                                        @if (isOverdue)
+                                        @task.DueDate.ToString(
+                                        "dd MMM yyyy",
+                                                                englishCulture)
+
+                                @if (isOverdue)
                                         {
                                             <span class="tasks-overdue">
                                                 Overdue
                                             </span>
                                         }
+
                                 </div>
+
                             </td>
 
-                            <td>
+                            <td data-label="Priority">
+
                                 <span class="tasks-priority priority-@task.Priority.ToString().ToLowerInvariant()">
                                     @task.Priority
                                 </span>
+
                             </td>
 
-                            <td>
+                            <td data-label="Status">
+
                                 <span class="tasks-status status-@task.Status.ToString().ToLowerInvariant()">
                                     @(task.Status == StudyTaskStatus.InProgress
                                                                     ? "In Progress"
                                                                     : task.Status.ToString())
                             </span>
-                        </td>
 
-                                <td>
+                                </td>
+
+                                <td data-label="Actions">
+
                                     <div class="tasks-actions">
 
                                         <button class="tasks-action edit"
                                                 title="Edit"
+                                                aria-label="Edit task"
                                                 @onclick="() => EditTask(task)">
                                             ✏️
                                         </button>
@@ -310,6 +354,7 @@
                                         {
                                             <button class="tasks-action progress-action"
                                                     title="Start Task"
+                                                    aria-label="Start task"
                                                     @onclick="() => ChangeStatus(task, StudyTaskStatus.InProgress)">
                                                 ▶️
                                             </button>
@@ -319,6 +364,7 @@
                                         {
                                             <button class="tasks-action complete"
                                                     title="Complete Task"
+                                                    aria-label="Complete task"
                                                     @onclick="() => CompleteTask(task.Id)">
                                                 ✅
                                             </button>
@@ -326,11 +372,13 @@
 
                                         <button class="tasks-action delete"
                                                 title="Delete"
+                                                aria-label="Delete task"
                                                 @onclick="() => RequestDelete(task.Id)">
                                             🗑️
                                         </button>
 
                                     </div>
+
                                 </td>
 
                             </tr>
@@ -345,6 +393,7 @@
 
     </div>
 
+    <!-- DELETE CONFIRMATION -->
     @if (taskToDelete.HasValue)
     {
         <div class="tasks-modal-overlay">
@@ -383,102 +432,89 @@
 
 <style>
 
+    /* GENERAL PAGE */
+
     .tasks-page {
-        padding: 15px 10px 40px;
+        width: 100%;
         max-width: 1500px;
-        margin: auto;
+        min-width: 0;
+        margin: 0 auto;
+        padding: 15px 10px 40px;
         color: #1e2440;
+        box-sizing: border-box;
     }
 
-    .tasks-error-banner {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 15px;
-        background: #fef2f2;
-        color: #b91c1c;
-        border: 1px solid #fecaca;
-        padding: 14px 18px;
-        border-radius: 12px;
-        margin-bottom: 20px;
-        font-size: 13px;
-        font-weight: 700;
-    }
+        .tasks-page * {
+            box-sizing: border-box;
+        }
 
-    .tasks-error-close {
-        background: transparent;
-        border: none;
-        color: #b91c1c;
-        font-size: 16px;
-        cursor: pointer;
-    }
-
-    .tasks-validation-error {
-        background: #fff1f2;
-        color: #be123c;
-        border: 1px solid #fecdd3;
-        padding: 13px 16px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-        font-size: 13px;
-        font-weight: 700;
-    }
+    /* HEADER */
 
     .tasks-header {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        gap: 15px;
-        flex-wrap: wrap;
-        margin-bottom: 28px;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 25px;
     }
 
         .tasks-header h2 {
             font-size: 30px;
             font-weight: 800;
-            margin-bottom: 8px;
+            margin: 0 0 8px;
         }
 
         .tasks-header p {
+            font-size: 14px;
             color: #8990a5;
             margin: 0;
         }
+
+    /* BUTTONS */
 
     .tasks-primary-button {
         background: linear-gradient(120deg, #6658f5, #9360f7);
         color: white;
         border: none;
-        padding: 12px 22px;
+        padding: 12px 20px;
         border-radius: 12px;
+        font-size: 13px;
         font-weight: 700;
         cursor: pointer;
-        box-shadow: 0 5px 15px rgba(102, 88, 245, 0.2);
+        box-shadow: 0 5px 15px rgba(102, 88, 245, 0.18);
     }
 
         .tasks-primary-button:hover {
             opacity: 0.9;
         }
 
-        .tasks-primary-button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
     .tasks-secondary-button {
-        background: #f0eaff;
+        background: #f1efff;
         color: #6658f5;
         border: none;
-        padding: 12px 22px;
+        padding: 12px 20px;
         border-radius: 12px;
         font-weight: 700;
         cursor: pointer;
     }
 
+    .tasks-danger-button {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    /* STATISTICS */
+
     .tasks-stats {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 18px;
-        margin-bottom: 30px;
+        gap: 16px;
+        margin-bottom: 25px;
     }
 
     .tasks-stat-card {
@@ -488,98 +524,111 @@
         display: flex;
         align-items: center;
         gap: 15px;
+        min-width: 0;
         box-shadow: 0 5px 25px rgba(30, 36, 64, 0.05);
     }
 
     .tasks-stat-icon {
-        font-size: 28px;
-        background: #f0eaff;
-        width: 55px;
-        height: 55px;
-        border-radius: 15px;
         display: flex;
         align-items: center;
         justify-content: center;
+        width: 52px;
+        height: 52px;
         flex-shrink: 0;
+        background: #f0eaff;
+        border-radius: 13px;
+        font-size: 25px;
     }
 
     .tasks-stat-card small {
+        display: block;
         color: #8990a5;
         font-size: 12px;
-        font-weight: 600;
     }
 
     .tasks-stat-card h3 {
-        font-size: 28px;
+        margin: 6px 0 0;
+        font-size: 29px;
         font-weight: 800;
-        margin: 5px 0 0;
+        color: #1e2440;
     }
+
+    /* PANELS */
 
     .tasks-form-card,
     .tasks-list-card {
         background: white;
-        padding: 28px;
-        border-radius: 22px;
+        padding: 25px;
+        border-radius: 20px;
+        margin-bottom: 24px;
         box-shadow: 0 5px 25px rgba(30, 36, 64, 0.05);
-        margin-bottom: 25px;
+        min-width: 0;
     }
 
     .tasks-section-header {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 20px;
     }
 
         .tasks-section-header h3 {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 800;
-            margin-bottom: 5px;
-        }
-
-        .tasks-section-header p {
-            color: #969bad;
-            font-size: 13px;
             margin: 0;
         }
 
+        .tasks-section-header p {
+            color: #8990a5;
+            font-size: 12px;
+            margin: 5px 0 0;
+        }
+
     .tasks-close-button {
-        background: #f0eaff;
+        background: #f3f0ff;
         color: #6658f5;
         border: none;
-        padding: 9px 14px;
-        border-radius: 10px;
+        width: 35px;
+        height: 35px;
+        border-radius: 9px;
         cursor: pointer;
     }
+
+    /* FORM */
 
     .tasks-form-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 20px;
+        gap: 17px;
     }
 
     .tasks-field {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 7px;
+        min-width: 0;
     }
 
         .tasks-field label {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
         }
 
         .tasks-field .form-control,
         .tasks-field .form-select {
+            width: 100%;
+            min-width: 0;
             padding: 12px;
-            border: 1px solid #e6e5f0;
+            border: 1px solid #e8e7f3;
             border-radius: 10px;
+            background: #fafaff;
         }
 
             .tasks-field .form-control:focus,
             .tasks-field .form-select:focus {
                 border-color: #9360f7;
-                box-shadow: 0 0 0 3px rgba(147, 96, 247, 0.12);
+                box-shadow: 0 0 0 3px rgba(147, 96, 247, 0.1);
             }
 
     .full-width {
@@ -588,47 +637,56 @@
 
     .tasks-form-actions {
         display: flex;
-        gap: 12px;
-        margin-top: 25px;
+        gap: 10px;
+        margin-top: 20px;
     }
+
+    /* FILTERS */
 
     .tasks-filters {
         display: grid;
         grid-template-columns: 2fr 1fr 1fr 1fr;
         gap: 12px;
-        margin-bottom: 25px;
+        margin-bottom: 20px;
     }
 
         .tasks-filters .form-control,
         .tasks-filters .form-select {
-            padding: 12px;
+            width: 100%;
+            min-width: 0;
+            padding: 11px;
+            border: 1px solid #e8e7f3;
             border-radius: 10px;
-            border: 1px solid #e6e5f0;
+            background: #fafaff;
+            font-size: 12px;
         }
 
+    /* TABLE */
+
     .tasks-table-wrapper {
+        width: 100%;
         overflow-x: auto;
     }
 
     .tasks-table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 850px;
+        font-size: 13px;
     }
 
         .tasks-table th {
-            background: #f8f7ff;
-            color: #8990a5;
-            padding: 16px;
+            background: #f6f4ff;
+            color: #6658f5;
             text-align: left;
+            padding: 15px 12px;
             font-size: 12px;
             font-weight: 800;
+            white-space: nowrap;
         }
 
         .tasks-table td {
-            padding: 18px 16px;
-            border-bottom: 1px solid #f1eff8;
-            font-size: 13px;
+            padding: 16px 12px;
+            border-bottom: 1px solid #f0eef7;
             vertical-align: middle;
         }
 
@@ -639,39 +697,40 @@
     .tasks-title-cell {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 5px;
+        min-width: 0;
     }
 
         .tasks-title-cell strong {
-            font-size: 14px;
+            font-size: 13px;
+            color: #1e2440;
+            overflow-wrap: anywhere;
         }
 
         .tasks-title-cell small {
-            color: #969bad;
-            max-width: 250px;
+            font-size: 11px;
+            color: #8990a5;
             overflow-wrap: anywhere;
         }
 
     .tasks-date-cell {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 5px;
     }
 
     .tasks-overdue {
         color: #dc2626;
-        background: #fee2e2;
-        padding: 4px 7px;
-        border-radius: 6px;
         font-size: 10px;
         font-weight: 700;
-        width: fit-content;
     }
+
+    /* BADGES */
 
     .tasks-priority,
     .tasks-status {
         display: inline-block;
-        padding: 7px 11px;
+        padding: 7px 10px;
         border-radius: 9px;
         font-size: 11px;
         font-weight: 700;
@@ -690,12 +749,12 @@
 
         .tasks-priority.priority-low {
             background: #dcfce7;
-            color: #16a34a;
+            color: #15803d;
         }
 
         .tasks-status.status-pending {
-            background: #fff3df;
-            color: #d97706;
+            background: #f3f4f6;
+            color: #6b7280;
         }
 
         .tasks-status.status-inprogress {
@@ -705,28 +764,36 @@
 
         .tasks-status.status-completed {
             background: #dcfce7;
-            color: #16a34a;
+            color: #15803d;
         }
+
+    /* ACTIONS */
 
     .tasks-actions {
         display: flex;
         gap: 6px;
+        flex-wrap: wrap;
     }
 
     .tasks-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 35px;
+        height: 35px;
         border: none;
         border-radius: 9px;
-        padding: 9px;
         cursor: pointer;
-        transition: 0.2s;
+        background: #f2efff;
+        font-size: 14px;
     }
 
         .tasks-action:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
         .tasks-action.edit {
-            background: #f0eaff;
+            background: #ede9fe;
         }
 
         .tasks-action.progress-action {
@@ -741,57 +808,77 @@
             background: #fee2e2;
         }
 
+    /* EMPTY STATE */
+
     .tasks-empty {
         text-align: center;
-        padding: 50px 20px;
+        padding: 45px 15px;
     }
 
         .tasks-empty div {
             font-size: 45px;
-            margin-bottom: 10px;
         }
 
         .tasks-empty h4 {
+            margin: 12px 0 6px;
             font-weight: 800;
         }
 
         .tasks-empty p {
-            color: #969bad;
+            color: #8990a5;
+            font-size: 13px;
         }
+
+    /* ERRORS */
+
+    .tasks-error {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+        padding: 12px 15px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        font-size: 13px;
+    }
+
+    /* DELETE MODAL */
 
     .tasks-modal-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(20, 20, 40, 0.45);
+        z-index: 1000;
+        background: rgba(20, 20, 40, 0.55);
         display: flex;
-        justify-content: center;
         align-items: center;
-        z-index: 9999;
+        justify-content: center;
+        padding: 20px;
     }
 
     .tasks-modal {
         background: white;
-        padding: 35px;
-        border-radius: 22px;
-        width: 90%;
-        max-width: 430px;
+        border-radius: 20px;
+        padding: 30px;
+        width: 100%;
+        max-width: 420px;
         text-align: center;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
     }
 
     .tasks-modal-icon {
         font-size: 45px;
-        margin-bottom: 15px;
+        margin-bottom: 12px;
     }
 
     .tasks-modal h3 {
+        font-size: 23px;
         font-weight: 800;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
     }
 
     .tasks-modal p {
         color: #8990a5;
-        font-size: 14px;
+        font-size: 13px;
+        line-height: 1.6;
     }
 
     .tasks-modal-actions {
@@ -801,17 +888,10 @@
         margin-top: 25px;
     }
 
-    .tasks-danger-button {
-        background: #ef4444;
-        color: white;
-        border: none;
-        padding: 12px 22px;
-        border-radius: 12px;
-        font-weight: 700;
-        cursor: pointer;
-    }
+    /* TABLET */
 
     @@media (max-width: 1100px) {
+
         .tasks-stats {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -819,18 +899,331 @@
         .tasks-filters {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
+
+            .tasks-filters input {
+                grid-column: 1 / -1;
+            }
     }
 
+    /* MOBILE - IPHONE 16 AND SMALL SCREENS */
+
     @@media (max-width: 650px) {
-        .tasks-stats,
-        .tasks-form-grid,
-        .tasks-filters {
-            grid-template-columns: 1fr;
+
+        .tasks-page {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            padding: 12px 0 25px;
         }
+        /* HEADER */
+
+        .tasks-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+            .tasks-header h2 {
+                font-size: 24px;
+                margin-bottom: 6px;
+            }
+
+            .tasks-header p {
+                font-size: 13px;
+                line-height: 1.5;
+            }
+
+        .tasks-primary-button {
+            padding: 10px 15px;
+            font-size: 12px;
+            border-radius: 10px;
+        }
+        /* TWO STATISTICS PER ROW */
+
+        .tasks-stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tasks-stat-card {
+            min-width: 0;
+            min-height: 0;
+            padding: 12px 10px;
+            gap: 9px;
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+        }
+
+        .tasks-stat-icon {
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+            font-size: 18px;
+            border-radius: 9px;
+        }
+
+        .tasks-stat-card > div {
+            min-width: 0;
+        }
+
+        .tasks-stat-card small {
+            font-size: 10px;
+            line-height: 1.3;
+        }
+
+        .tasks-stat-card h3 {
+            font-size: 23px;
+            margin: 4px 0 0;
+        }
+        /* PANELS */
 
         .tasks-form-card,
         .tasks-list-card {
-            padding: 18px;
+            width: 100%;
+            min-width: 0;
+            padding: 15px;
+            border-radius: 16px;
+            margin-bottom: 18px;
+        }
+
+        .tasks-section-header {
+            margin-bottom: 15px;
+        }
+
+            .tasks-section-header h3 {
+                font-size: 17px;
+            }
+
+            .tasks-section-header p {
+                font-size: 11px;
+            }
+        /* FORM */
+
+        .tasks-form-grid {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 13px;
+        }
+
+        .tasks-field {
+            min-width: 0;
+            gap: 5px;
+        }
+
+            .tasks-field label {
+                font-size: 12px;
+            }
+
+            .tasks-field .form-control,
+            .tasks-field .form-select {
+                width: 100%;
+                min-width: 0;
+                max-width: 100%;
+                padding: 10px;
+                font-size: 16px;
+            }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .tasks-form-actions {
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 18px;
+        }
+
+            .tasks-form-actions button {
+                flex: 1;
+                min-width: 110px;
+                padding: 10px;
+                font-size: 12px;
+            }
+        /* FILTERS */
+
+        .tasks-filters {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+            .tasks-filters input {
+                grid-column: 1 / -1;
+            }
+
+            .tasks-filters .form-control,
+            .tasks-filters .form-select {
+                width: 100%;
+                min-width: 0;
+                max-width: 100%;
+                padding: 9px;
+                font-size: 12px;
+            }
+        /* TABLE BECOMES CARDS */
+
+        .tasks-table-wrapper {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: visible;
+        }
+
+        .tasks-table {
+            display: block;
+            width: 100%;
+            min-width: 0;
+        }
+
+            .tasks-table thead {
+                display: none;
+            }
+
+            .tasks-table tbody {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr);
+                gap: 12px;
+            }
+
+                .tasks-table tbody tr {
+                    display: grid;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 9px;
+                    padding: 13px;
+                    border: 1px solid #eeedf8;
+                    border-radius: 13px;
+                    background: #fafaff;
+                    min-width: 0;
+                }
+
+            .tasks-table td {
+                display: block;
+                min-width: 0;
+                padding: 0;
+                border: none;
+                font-size: 11px;
+                overflow-wrap: anywhere;
+            }
+
+                .tasks-table td::before {
+                    content: attr(data-label);
+                    display: block;
+                    font-size: 9px;
+                    font-weight: 700;
+                    color: #8990a5;
+                    margin-bottom: 5px;
+                }
+
+                .tasks-table td:first-child {
+                    grid-column: 1 / -1;
+                    padding-bottom: 9px;
+                    border-bottom: 1px solid #eeedf8;
+                }
+
+                    .tasks-table td:first-child::before {
+                        display: none;
+                    }
+
+        .tasks-title-cell strong {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .tasks-title-cell small {
+            font-size: 11px;
+        }
+
+        .tasks-date-cell {
+            gap: 5px;
+            font-size: 11px;
+        }
+
+        .tasks-priority,
+        .tasks-status {
+            padding: 6px 8px;
+            font-size: 10px;
+            max-width: 100%;
+            white-space: normal;
+        }
+        /* ACTION BUTTONS */
+
+        .tasks-table td:last-child {
+            grid-column: 1 / -1;
+            padding-top: 9px;
+            border-top: 1px solid #eeedf8;
+        }
+
+        .tasks-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+
+        .tasks-action {
+            width: 35px;
+            height: 35px;
+            font-size: 14px;
+            border-radius: 9px;
+        }
+        /* EMPTY STATE */
+
+        .tasks-empty {
+            padding: 30px 10px;
+        }
+
+            .tasks-empty div {
+                font-size: 35px;
+            }
+
+            .tasks-empty h4 {
+                font-size: 16px;
+            }
+
+            .tasks-empty p {
+                font-size: 12px;
+            }
+        /* DELETE MODAL */
+
+        .tasks-modal-overlay {
+            padding: 12px;
+        }
+
+        .tasks-modal {
+            width: 100%;
+            max-width: 350px;
+            padding: 22px 16px;
+            border-radius: 16px;
+        }
+
+        .tasks-modal-icon {
+            font-size: 35px;
+        }
+
+        .tasks-modal h3 {
+            font-size: 19px;
+        }
+
+        .tasks-modal p {
+            font-size: 12px;
+        }
+
+        .tasks-modal-actions {
+            gap: 8px;
+            margin-top: 18px;
+        }
+
+            .tasks-modal-actions button {
+                flex: 1;
+                min-width: 0;
+                padding: 10px 8px;
+                font-size: 11px;
+            }
+
+        .tasks-error {
+            padding: 11px;
+            font-size: 11px;
         }
     }
 
@@ -845,9 +1238,11 @@
 
     private TaskItem taskForm = new();
 
+    private string validationError = "";
+    private string operationError = "";
+
     private bool isEditing = false;
     private bool showForm = false;
-    private bool isSaving = false;
 
     private int? taskToDelete;
 
@@ -855,9 +1250,6 @@
     private string statusFilter = "All";
     private string priorityFilter = "All";
     private string sortOrder = "DueSoon";
-
-    private string validationError = "";
-    private string operationError = "";
 
     protected override void OnInitialized()
     {
@@ -867,48 +1259,61 @@
 
     private void LoadTasks()
     {
-        try
-        {
-            tasks = TaskService.GetAll();
-        }
-        catch (Exception)
-        {
-            operationError = "Unable to load tasks. Please try again.";
-        }
+        tasks = TaskService.GetAll();
     }
+
+    /* SEARCH, FILTER AND SORT */
 
     private IEnumerable<TaskItem> FilteredTasks
     {
         get
         {
             var result = tasks.Where(t =>
-                (string.IsNullOrWhiteSpace(searchText) ||
-                 (t.Title?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                 (t.Subject?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                 (t.Description?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false))
+                (
+                    string.IsNullOrWhiteSpace(searchText) ||
+                    (t.Title?.Contains(
+                        searchText,
+                        StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (t.Subject?.Contains(
+                        searchText,
+                        StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (t.Description?.Contains(
+                        searchText,
+                        StringComparison.OrdinalIgnoreCase) ?? false)
+                )
                 &&
-                (statusFilter == "All" ||
-                 t.Status.ToString() == statusFilter)
+                (
+                    statusFilter == "All" ||
+                    t.Status.ToString() == statusFilter
+                )
                 &&
-                (priorityFilter == "All" ||
-                 t.Priority.ToString() == priorityFilter)
+                (
+                    priorityFilter == "All" ||
+                    t.Priority.ToString() == priorityFilter
+                )
             );
 
             return sortOrder switch
             {
-                "DueLate" => result.OrderByDescending(t => t.DueDate),
-                "Priority" => result.OrderByDescending(t => t.Priority),
-                "Title" => result.OrderBy(t => t.Title),
-                _ => result.OrderBy(t => t.DueDate)
+                "DueLate" =>
+                    result.OrderByDescending(t => t.DueDate),
+
+                "Priority" =>
+                    result.OrderByDescending(t => t.Priority),
+
+                "Title" =>
+                    result.OrderBy(t => t.Title),
+
+                _ =>
+                    result.OrderBy(t => t.DueDate)
             };
         }
     }
 
+    /* SAVE TASK */
+
     private void SaveTask()
     {
-        if (isSaving)
-            return;
-
         validationError = "";
         operationError = "";
 
@@ -920,13 +1325,8 @@
             return;
         }
 
-        isSaving = true;
-
         try
         {
-            taskForm.Title = taskForm.Title.Trim();
-            taskForm.Subject = taskForm.Subject.Trim();
-
             if (isEditing)
             {
                 TaskService.Update(taskForm);
@@ -941,24 +1341,25 @@
         }
         catch (Exception)
         {
-            operationError = "Unable to save the task. Please try again.";
-        }
-        finally
-        {
-            isSaving = false;
+            operationError =
+                "Unable to save the task. Please try again.";
         }
     }
 
+    /* ADD TASK */
+
     private void ShowAddForm()
     {
-        ResetForm();
-
         validationError = "";
         operationError = "";
+
+        ResetForm();
 
         isEditing = false;
         showForm = true;
     }
+
+    /* EDIT TASK */
 
     private void EditTask(TaskItem task)
     {
@@ -980,15 +1381,19 @@
         showForm = true;
     }
 
+    /* CANCEL EDIT */
+
     private void CancelEdit()
     {
-        ResetForm();
-
         validationError = "";
+
+        ResetForm();
 
         isEditing = false;
         showForm = false;
     }
+
+    /* RESET FORM */
 
     private void ResetForm()
     {
@@ -1000,9 +1405,10 @@
         };
     }
 
+    /* DELETE TASK */
+
     private void RequestDelete(int id)
     {
-        operationError = "";
         taskToDelete = id;
     }
 
@@ -1013,22 +1419,28 @@
 
     private void ConfirmDelete()
     {
-        if (!taskToDelete.HasValue)
-            return;
+        operationError = "";
 
         try
         {
-            TaskService.Delete(taskToDelete.Value);
-            LoadTasks();
-
-            taskToDelete = null;
+            if (taskToDelete.HasValue)
+            {
+                TaskService.Delete(taskToDelete.Value);
+                LoadTasks();
+            }
         }
         catch (Exception)
         {
-            operationError = "Unable to delete the task. Please try again.";
+            operationError =
+                "Unable to delete the task. Please try again.";
+        }
+        finally
+        {
             taskToDelete = null;
         }
     }
+
+    /* COMPLETE TASK */
 
     private void CompleteTask(int id)
     {
@@ -1041,14 +1453,17 @@
         }
         catch (Exception)
         {
-            operationError = "Unable to complete the task. Please try again.";
+            operationError =
+                "Unable to complete the task. Please try again.";
         }
     }
 
-    private void ChangeStatus(TaskItem task, StudyTaskStatus status)
-    {
-        operationError = "";
+    /* CHANGE STATUS */
 
+    private void ChangeStatus(
+        TaskItem task,
+        StudyTaskStatus status)
+    {
         var updatedTask = new TaskItem
         {
             Id = task.Id,
@@ -1060,6 +1475,8 @@
             Status = status
         };
 
+        operationError = "";
+
         try
         {
             TaskService.Update(updatedTask);
@@ -1067,7 +1484,8 @@
         }
         catch (Exception)
         {
-            operationError = "Unable to update task status. Please try again.";
+            operationError =
+                "Unable to update the task status. Please try again.";
         }
     }
 }

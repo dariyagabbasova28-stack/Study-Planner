@@ -521,6 +521,303 @@
         }
     }
 
+    /* Compact mobile dashboard */
+    @@media (max-width: 600px) {
+
+        .study-dashboard {
+            width: 100%;
+            min-width: 0;
+            padding: 10px 0 24px;
+        }
+
+            .study-dashboard .section-heading {
+                gap: 10px;
+                margin-bottom: 14px;
+            }
+
+                .study-dashboard .section-heading h3 {
+                    font-size: 21px;
+                }
+
+            .study-dashboard .dashboard-heading-actions {
+                gap: 8px;
+            }
+
+            .study-dashboard .today-badge,
+            .study-dashboard .dashboard-refresh {
+                padding: 8px 10px;
+                font-size: 11px;
+            }
+
+            .study-dashboard .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+                margin-bottom: 18px;
+            }
+
+                .study-dashboard .stats-grid .stat-card {
+                    min-width: 0;
+                    min-height: 0;
+                    height: auto;
+                    padding: 14px 12px;
+                    border-radius: 14px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    justify-content: flex-start;
+                    gap: 6px;
+                }
+
+                .study-dashboard .stats-grid .stat-icon {
+                    width: 36px;
+                    height: 36px;
+                    min-width: 36px;
+                    min-height: 36px;
+                    margin: 0 0 3px;
+                    font-size: 19px;
+                    border-radius: 10px;
+                }
+
+                .study-dashboard .stats-grid .stat-label {
+                    font-size: 11px;
+                    line-height: 1.3;
+                }
+
+                .study-dashboard .stats-grid .stat-number {
+                    font-size: 26px;
+                    line-height: 1.1;
+                    margin: 0;
+                }
+
+                .study-dashboard .stats-grid .stat-footer {
+                    font-size: 10px;
+                    line-height: 1.35;
+                    margin: 0;
+                }
+
+            .study-dashboard .reminders-panel,
+            .study-dashboard .dashboard-panel,
+            .study-dashboard .motivation-card {
+                min-width: 0;
+                padding: 16px;
+            }
+
+            .study-dashboard .reminders-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .study-dashboard .reminder-card {
+                padding: 12px;
+            }
+
+            .study-dashboard .reminder-icon {
+                width: 42px;
+                height: 42px;
+                font-size: 22px;
+            }
+
+            .study-dashboard .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .study-dashboard .deadline-item {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+    }
+
+    /* =========================================
+       STUDYMATE - COMPACT MOBILE DASHBOARD
+       ========================================= */
+
+    @@media (max-width: 600px) {
+        /* Main dashboard */
+
+        .study-dashboard {
+            width: 100%;
+            min-width: 0;
+            padding: 10px 0 24px;
+        }
+            /* Overview heading */
+
+            .study-dashboard .section-heading {
+                gap: 10px;
+                margin-bottom: 14px;
+            }
+
+                .study-dashboard .section-heading h3 {
+                    font-size: 21px;
+                }
+
+            .study-dashboard .dashboard-heading-actions {
+                gap: 8px;
+            }
+
+            .study-dashboard .today-badge,
+            .study-dashboard .dashboard-refresh {
+                padding: 8px 10px;
+                font-size: 11px;
+            }
+            /* Statistics - 2 cards per row */
+
+            .study-dashboard .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+                margin-bottom: 18px;
+            }
+
+                .study-dashboard .stats-grid .stat-card {
+                    min-width: 0;
+                    min-height: 0;
+                    height: auto;
+                    padding: 14px 12px;
+                    border-radius: 14px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    justify-content: flex-start;
+                    gap: 6px;
+                }
+
+                .study-dashboard .stats-grid .stat-icon {
+                    width: 36px;
+                    height: 36px;
+                    min-width: 36px;
+                    min-height: 36px;
+                    margin: 0 0 3px;
+                    font-size: 19px;
+                    border-radius: 10px;
+                }
+
+                .study-dashboard .stats-grid .stat-label {
+                    font-size: 11px;
+                    line-height: 1.3;
+                }
+
+                .study-dashboard .stats-grid .stat-number {
+                    font-size: 26px;
+                    line-height: 1.1;
+                    margin: 0;
+                }
+
+                .study-dashboard .stats-grid .stat-footer {
+                    font-size: 10px;
+                    line-height: 1.35;
+                    margin: 0;
+                }
+            /* Deadline reminders panel */
+
+            .study-dashboard .reminders-panel {
+                min-width: 0;
+                padding: 16px;
+                margin-bottom: 18px;
+                border-radius: 16px;
+            }
+
+            .study-dashboard .reminders-header {
+                gap: 10px;
+                margin-bottom: 14px;
+            }
+
+                .study-dashboard .reminders-header h3 {
+                    font-size: 17px;
+                    margin-bottom: 5px;
+                }
+
+                .study-dashboard .reminders-header p {
+                    font-size: 11px;
+                    line-height: 1.4;
+                }
+
+            .study-dashboard .notification-counter {
+                padding: 7px 10px;
+                font-size: 10px;
+            }
+            /* Three reminder cards in one row */
+
+            .study-dashboard .reminders-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 6px;
+                margin-bottom: 12px;
+            }
+
+            .study-dashboard .reminder-card {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                gap: 5px;
+                min-width: 0;
+                padding: 10px 4px;
+                border-radius: 12px;
+            }
+
+            .study-dashboard .reminder-icon {
+                width: 30px;
+                height: 30px;
+                flex-shrink: 0;
+                font-size: 16px;
+                border-radius: 9px;
+            }
+
+            .study-dashboard .reminder-card span {
+                display: block;
+                font-size: 10px;
+                line-height: 1.2;
+            }
+
+            .study-dashboard .reminder-card h2 {
+                font-size: 22px;
+                line-height: 1.1;
+                margin: 2px 0;
+            }
+
+            .study-dashboard .reminder-card small {
+                display: block;
+                font-size: 9px;
+                line-height: 1.2;
+            }
+            /* Reminder messages */
+
+            .study-dashboard .reminder-success {
+                padding: 11px;
+                font-size: 11px;
+                line-height: 1.5;
+                border-radius: 10px;
+            }
+
+            .study-dashboard .reminder-alert-item {
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 10px;
+            }
+            /* Study progress and motivation */
+
+            .study-dashboard .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .study-dashboard .dashboard-panel,
+            .study-dashboard .motivation-card {
+                min-width: 0;
+                padding: 16px;
+                border-radius: 16px;
+            }
+            /* Upcoming deadlines */
+
+            .study-dashboard .deadline-item {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+    }
+
 </style>
 
 @code {

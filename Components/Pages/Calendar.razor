@@ -98,6 +98,7 @@
         </div>
 
         <div class="calendar-legend">
+
             <span>
                 <i class="legend-dot high-dot"></i>
                 High Priority
@@ -112,6 +113,7 @@
                 <i class="legend-dot low-dot"></i>
                 Low Priority
             </span>
+
         </div>
 
     </div>
@@ -192,6 +194,7 @@
 </div>
 
 <style>
+
     .study-calendar {
         padding: 15px 10px 40px;
         max-width: 1500px;
@@ -512,32 +515,243 @@
             color: #969bad;
         }
 
+    /* MOBILE VERSION */
+
     @@media (max-width: 800px) {
-        .calendar-container
 
-    {
-        padding: 12px;
-        overflow-x: auto;
+        .study-calendar {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            padding: 12px 0 25px;
+            box-sizing: border-box;
+        }
+
+        .calendar-title {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+            .calendar-title h2 {
+                font-size: 24px;
+                margin-bottom: 6px;
+            }
+
+            .calendar-title p {
+                font-size: 13px;
+                line-height: 1.5;
+            }
+
+        .calendar-add-button {
+            padding: 10px 16px;
+            font-size: 12px;
+            border-radius: 10px;
+        }
+
+        .calendar-container {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            padding: 12px 8px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .calendar-toolbar {
+            display: grid;
+            grid-template-columns: 66px minmax(0, 1fr) 66px;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 18px;
+        }
+
+        .calendar-nav-button {
+            width: 100%;
+            min-width: 0;
+            padding: 9px 3px;
+            font-size: 10px;
+            line-height: 1.4;
+            border-radius: 9px;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+
+        .calendar-month {
+            min-width: 0;
+            text-align: center;
+        }
+
+            .calendar-month h3 {
+                font-size: 16px;
+                line-height: 1.25;
+                margin-bottom: 5px;
+                overflow-wrap: anywhere;
+            }
+
+            .calendar-month span {
+                font-size: 10px;
+            }
+
+        .calendar-grid {
+            display: grid;
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 3px;
+        }
+
+        .calendar-header {
+            min-width: 0;
+            padding: 9px 1px;
+            font-size: 9px;
+            border-radius: 6px;
+        }
+
+        .calendar-day {
+            min-width: 0;
+            width: 100%;
+            min-height: 48px;
+            padding: 4px 2px;
+            border-radius: 7px;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+            .calendar-day:hover {
+                transform: none;
+            }
+
+        .calendar-day-number {
+            gap: 1px;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        .task-count {
+            width: 14px;
+            height: 14px;
+            min-width: 14px;
+            font-size: 8px;
+        }
+
+        .calendar-task {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            padding: 3px 1px;
+            margin-bottom: 2px;
+            border-radius: 3px;
+            font-size: 7px;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-sizing: border-box;
+        }
+
+        .more-tasks {
+            font-size: 7px;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .calendar-empty {
+            min-width: 0;
+            min-height: 48px;
+            border-radius: 7px;
+        }
+
+        .calendar-legend {
+            justify-content: center;
+            gap: 8px 12px;
+            margin-top: 16px;
+        }
+
+            .calendar-legend span {
+                font-size: 10px;
+                gap: 4px;
+            }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+        }
+
+        .selected-day-panel {
+            width: 100%;
+            min-width: 0;
+            padding: 15px;
+            border-radius: 16px;
+            box-sizing: border-box;
+        }
+
+        .selected-day-header {
+            gap: 10px;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+            .selected-day-header h4 {
+                font-size: 16px;
+                line-height: 1.4;
+            }
+
+            .selected-day-header p {
+                font-size: 11px;
+            }
+
+        .close-selection {
+            flex-shrink: 0;
+            padding: 8px 11px;
+        }
+
+        .selected-task {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        .selected-task-info {
+            min-width: 0;
+            width: 100%;
+            overflow-wrap: anywhere;
+        }
+
+            .selected-task-info h5 {
+                font-size: 14px;
+            }
+
+            .selected-task-info p {
+                font-size: 11px;
+            }
+
+        .selected-task-badges {
+            gap: 6px;
+        }
+
+        .calendar-priority,
+        .status-badge {
+            padding: 6px 9px;
+            font-size: 10px;
+        }
+
+        .empty-calendar-day {
+            padding: 25px 10px;
+        }
     }
 
-    .calendar-grid {
-        min-width: 650px;
-    }
-
-    .calendar-title {
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-
-    .selected-task {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    }
 </style>
 
 @code {
+
     private readonly CultureInfo englishCulture =
         CultureInfo.GetCultureInfo("en-US");
 

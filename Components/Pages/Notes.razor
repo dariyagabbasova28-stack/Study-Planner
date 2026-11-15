@@ -543,10 +543,371 @@
         }
     }
 
-    @@media (max-width: 700px) {
-        .notes-grid,
+    /* TABLET */
+
+    @@media (max-width: 900px) {
+
         .notes-stats {
-            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .notes-stat {
+            padding: 16px;
+            gap: 10px;
+        }
+
+            .notes-stat > span {
+                width: 42px;
+                height: 42px;
+                min-width: 42px;
+                font-size: 22px;
+            }
+
+        .notes-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 15px;
+        }
+    }
+
+    /* MOBILE */
+
+    @@media (max-width: 700px) {
+
+        .notes-page {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            padding: 12px 0 25px;
+            box-sizing: border-box;
+        }
+
+            .notes-page * {
+                box-sizing: border-box;
+            }
+        /* HEADER */
+
+        .notes-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+            .notes-header h2 {
+                font-size: 24px;
+                line-height: 1.3;
+                margin-bottom: 6px;
+            }
+
+            .notes-header p {
+                font-size: 12px;
+                line-height: 1.5;
+            }
+
+            .notes-header .notes-primary {
+                padding: 10px 16px;
+                font-size: 12px;
+                border-radius: 10px;
+            }
+        /* STATISTICS: TWO CARDS + ONE FULL WIDTH */
+
+        .notes-stats {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+            width: 100%;
+            min-width: 0;
+            margin-bottom: 22px;
+        }
+
+            .notes-stats > .notes-stat {
+                grid-column: auto !important;
+                min-width: 0;
+                width: 100%;
+                padding: 13px 10px;
+                border-radius: 14px;
+                gap: 8px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+            }
+
+                .notes-stats > .notes-stat:nth-child(3) {
+                    grid-column: 1 / -1 !important;
+                    flex-direction: row;
+                    justify-content: center;
+                    gap: 14px;
+                }
+
+        .notes-stat > span {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            font-size: 21px;
+            border-radius: 11px;
+        }
+
+        .notes-stat > div {
+            min-width: 0;
+        }
+
+        .notes-stat small {
+            display: block;
+            font-size: 11px;
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+        }
+
+        .notes-stat h3 {
+            font-size: 23px;
+            margin: 4px 0 0;
+            line-height: 1.2;
+        }
+        /* NEW NOTE FORM */
+
+        .notes-form-card {
+            width: 100%;
+            min-width: 0;
+            padding: 16px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .notes-form-header {
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+            .notes-form-header h3 {
+                font-size: 17px;
+                line-height: 1.4;
+            }
+
+        .notes-close {
+            padding: 8px 11px;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .notes-field {
+            margin-bottom: 15px;
+        }
+
+            .notes-field label {
+                font-size: 12px;
+                margin-bottom: 6px;
+            }
+
+            .notes-field .form-control {
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+                padding: 11px;
+                font-size: 14px;
+                border-radius: 9px;
+            }
+
+            .notes-field textarea.form-control {
+                min-height: 150px;
+                resize: vertical;
+            }
+
+        .notes-form-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 9px;
+            margin-top: 18px;
+        }
+
+            .notes-form-actions button {
+                width: 100%;
+                min-width: 0;
+                padding: 11px 8px;
+                font-size: 12px;
+                border-radius: 9px;
+            }
+        /* TOOLBAR */
+
+        .notes-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+            .notes-toolbar h3 {
+                font-size: 20px;
+                margin-bottom: 4px;
+            }
+
+            .notes-toolbar p {
+                font-size: 12px;
+            }
+
+        .notes-search {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            padding: 11px 13px;
+            font-size: 13px;
+            border-radius: 10px;
+        }
+        /* NOTES LIST */
+
+        .notes-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 12px;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .note-card {
+            width: 100%;
+            min-width: 0;
+            padding: 16px;
+            border-radius: 15px;
+        }
+
+        .note-card-top {
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .note-icon {
+            font-size: 22px;
+            padding: 9px;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .note-subject {
+            max-width: 75%;
+            padding: 6px 10px;
+            font-size: 10px;
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+            text-align: center;
+        }
+
+        .note-card h4 {
+            font-size: 16px;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .note-preview {
+            font-size: 12px;
+            line-height: 1.6;
+            min-height: 0;
+            margin-bottom: 14px;
+        }
+
+        .note-date {
+            font-size: 10px;
+            margin-bottom: 13px;
+        }
+
+        .note-actions {
+            gap: 9px;
+            padding-top: 13px;
+        }
+
+        .note-edit,
+        .note-delete {
+            padding: 10px 8px;
+            font-size: 11px;
+            border-radius: 9px;
+        }
+        /* EMPTY STATE */
+
+        .notes-empty {
+            padding: 30px 15px;
+            border-radius: 15px;
+        }
+
+            .notes-empty div {
+                font-size: 34px;
+            }
+
+            .notes-empty h4 {
+                font-size: 17px;
+            }
+
+            .notes-empty p {
+                font-size: 12px;
+                line-height: 1.5;
+            }
+        /* DELETE CONFIRMATION */
+
+        .notes-modal-overlay {
+            padding: 15px;
+        }
+
+        .notes-modal {
+            width: 100%;
+            max-width: 380px;
+            padding: 22px 16px;
+            border-radius: 16px;
+        }
+
+        .notes-modal-icon {
+            font-size: 35px;
+        }
+
+        .notes-modal h3 {
+            font-size: 19px;
+        }
+
+        .notes-modal p {
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .notes-modal-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 9px;
+            margin-top: 18px;
+        }
+
+            .notes-modal-actions button {
+                min-width: 0;
+                width: 100%;
+                padding: 11px 7px;
+                font-size: 11px;
+                border-radius: 9px;
+            }
+    }
+
+    /* EXTRA SMALL PHONES */
+
+    @@media (max-width: 350px) {
+
+        .notes-stat {
+            padding: 11px 6px !important;
+        }
+
+            .notes-stat > span {
+                width: 35px;
+                height: 35px;
+                min-width: 35px;
+                font-size: 19px;
+            }
+
+            .notes-stat small {
+                font-size: 10px;
+            }
+
+            .notes-stat h3 {
+                font-size: 21px;
+            }
+
+        .notes-form-card,
+        .note-card {
+            padding: 13px;
         }
     }
 </style>

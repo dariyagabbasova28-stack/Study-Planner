@@ -913,3 +913,216 @@ label {
         .studymate-layout .calendar-task.high {
             border-left: 4px solid #ef4444 !important;
         }
+
+/* =====================================================
+   STUDYMATE - GLOBAL MOBILE RESPONSIVE IMPROVEMENTS
+   ===================================================== */
+
+@media (max-width: 600px) {
+
+    /* GENERAL */
+
+    html,
+    body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .studymate-layout,
+    .studymate-layout main,
+    .studymate-layout article,
+    .studymate-layout .content {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+        .studymate-layout .content {
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+
+        /* PAGE HEADINGS */
+
+        .studymate-layout h1 {
+            font-size: 24px;
+            line-height: 1.25;
+        }
+
+        .studymate-layout h2 {
+            font-size: 21px;
+        }
+
+        /* DASHBOARD AND TASK STATISTICS */
+
+        .studymate-layout .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+            .studymate-layout .stats-grid .stat-card {
+                min-width: 0;
+                min-height: 0;
+                height: auto;
+                padding: 14px 12px;
+                border-radius: 14px;
+            }
+
+            .studymate-layout .stats-grid .stat-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 19px;
+                margin-bottom: 8px;
+            }
+
+            .studymate-layout .stats-grid .stat-number {
+                font-size: 26px;
+            }
+
+            .studymate-layout .stats-grid .stat-label {
+                font-size: 11px;
+            }
+
+            .studymate-layout .stats-grid .stat-footer {
+                font-size: 10px;
+            }
+
+        /* COMMON CARDS */
+
+        .studymate-layout .card {
+            min-width: 0;
+            border-radius: 14px;
+        }
+
+        /* FOCUS TIMER */
+
+        .studymate-layout .focus-stat-card {
+            min-width: 0;
+            min-height: 0;
+            height: auto;
+            padding: 14px 10px;
+            border-radius: 14px;
+        }
+
+            .studymate-layout .focus-stat-card h3 {
+                font-size: 23px;
+            }
+
+            .studymate-layout .focus-stat-card p {
+                font-size: 11px;
+            }
+
+        .studymate-layout .timer-display {
+            font-size: clamp(42px, 12vw, 64px);
+        }
+
+        .studymate-layout .focus-modes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+            .studymate-layout .focus-modes button {
+                min-width: 0;
+                font-size: 11px;
+                padding: 9px 8px;
+            }
+
+        /* CALENDAR */
+
+        .studymate-layout .calendar-header,
+        .studymate-layout .calendar-day {
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .studymate-layout .calendar-day {
+            min-height: 48px;
+            padding: 3px;
+            font-size: 10px;
+            overflow: hidden;
+        }
+
+        .studymate-layout .calendar-task {
+            max-width: 100%;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 8px;
+            padding: 2px;
+        }
+
+        /* TABLES */
+
+        .studymate-layout .table-responsive {
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .studymate-layout .table {
+            font-size: 12px;
+        }
+
+            .studymate-layout .table th,
+            .studymate-layout .table td {
+                padding: 9px;
+            }
+
+        /* FORMS */
+
+        .studymate-layout .form-control,
+        .studymate-layout .form-select {
+            max-width: 100%;
+            min-width: 0;
+            font-size: 16px;
+        }
+
+        /* BUTTONS */
+
+        .studymate-layout .btn {
+            max-width: 100%;
+            white-space: normal;
+            font-size: 12px;
+            padding: 9px 12px;
+        }
+
+        /* SETTINGS */
+
+        .studymate-layout .settings-field {
+            min-width: 0;
+        }
+
+            .studymate-layout .settings-field input {
+                max-width: 100%;
+            }
+
+        /* DEADLINES */
+
+        .studymate-layout .deadline-item {
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px;
+        }
+
+        .studymate-layout .deadline-info {
+            min-width: 0;
+        }
+
+            .studymate-layout .deadline-info h5 {
+                overflow-wrap: anywhere;
+            }
+
+        /* PROGRESS */
+
+        .studymate-layout .dashboard-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .studymate-layout .dashboard-panel {
+            min-width: 0;
+            padding: 16px;
+        }
+}

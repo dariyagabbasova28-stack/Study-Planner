@@ -204,7 +204,7 @@ The test suite covers:
 - Invalid task information.
 - Missing required fields.
 
-Additional tests verify recommendation behavior under different conditions.
+Additional tests verify recommendation behavior under different conditions. 
 
 The application also supports manual functional testing of its main features.
 
