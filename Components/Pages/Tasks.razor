@@ -1,4 +1,4 @@
-﻿@page "/tasks"
+@page "/tasks"
 @rendermode InteractiveServer
 
 @using StudyMate.Models
@@ -223,6 +223,7 @@
                 <option value="Pending">Pending</option>
                 <option value="InProgress">In Progress</option>
                 <option value="Completed">Completed</option>
+                <option value="Overdue">Overdue (not completed)</option>
 
             </select>
 
@@ -1284,6 +1285,9 @@
                 &&
                 (
                     statusFilter == "All" ||
+                    (statusFilter == "Overdue" &&
+                     t.Status != StudyTaskStatus.Completed &&
+                     t.DueDate.Date < DateTime.Today) ||
                     t.Status.ToString() == statusFilter
                 )
                 &&
@@ -1299,7 +1303,8 @@
                     result.OrderByDescending(t => t.DueDate),
 
                 "Priority" =>
-                    result.OrderByDescending(t => t.Priority),
+                    result.OrderByDescending(t => t.Priority)
+                          .ThenBy(t => t.DueDate),
 
                 "Title" =>
                     result.OrderBy(t => t.Title),
