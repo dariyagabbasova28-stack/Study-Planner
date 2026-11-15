@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 @rendermode InteractiveServer
 @implements IDisposable
 
@@ -43,6 +43,7 @@
             <button class="dashboard-refresh" @onclick="LoadData">
                 ↻ Refresh
             </button>
+            <span class="today-badge">Updated: @LastUpdated.ToString("HH:mm", EnglishCulture)</span>
         </div>
     </div>
 
@@ -826,6 +827,7 @@
         CultureInfo.GetCultureInfo("en-US");
 
     private List<TaskItem> Tasks = new();
+    private DateTime LastUpdated = DateTime.Now;
 
     private int TotalTasks =>
         Tasks.Count;
@@ -910,6 +912,7 @@
     private void LoadData()
     {
         Tasks = TaskService.GetAll();
+        LastUpdated = DateTime.Now;
     }
 
     private void HandleStateChanged()
