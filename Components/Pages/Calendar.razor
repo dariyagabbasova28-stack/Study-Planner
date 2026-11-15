@@ -1,4 +1,4 @@
-﻿@page "/calendar"
+@page "/calendar"
 @rendermode InteractiveServer
 
 @using StudyMate.Models
@@ -17,6 +17,8 @@
             <p>Stay organized and never miss an important deadline.</p>
         </div>
 
+        <button class="calendar-nav-button" @onclick="GoToToday">Today</button>
+        <button class="calendar-nav-button" @onclick="RefreshTasks">↻ Refresh</button>
         <a href="/tasks" class="calendar-add-button">
             + Add Task
         </a>
@@ -791,7 +793,19 @@
 
     protected override void OnInitialized()
     {
+        RefreshTasks();
+    }
+
+    private void RefreshTasks()
+    {
         tasks = TaskService.GetAll();
+    }
+
+    private void GoToToday()
+    {
+        currentMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        selectedDate = DateTime.Today;
+        RefreshTasks();
     }
 
     private void PreviousMonth()
